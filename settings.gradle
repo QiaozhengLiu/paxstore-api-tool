@@ -1,0 +1,3 @@
+rootProject.name = "PaxstoreApiTool"
+
+include ':apiTool'
