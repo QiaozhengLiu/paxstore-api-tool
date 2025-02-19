@@ -74,10 +74,10 @@ public class App {
                 .addOption(appOption)
                 .addOption(pkgOption);
 
-        // print help info
-        HelpFormatter helpFormatter = new HelpFormatter();
-        options.addOption("?", "help", false, "Display help information");
-        helpFormatter.printHelp("apiTool -k apiKey -s apiSecret -u apiUrl -a appName -p packageName", options);
+//        // print help info
+//        HelpFormatter helpFormatter = new HelpFormatter();
+//        options.addOption("?", "help", false, "Display help information");
+//        helpFormatter.printHelp("apiTool -k apiKey -s apiSecret -u apiUrl -a appName -p packageName", options);
 
         // parse args
         String apiKey, apiSecret, apiUrl, appName, pkgName;
@@ -104,19 +104,11 @@ public class App {
             logger.error("get app info failed. error code: " + appInfo.getBusinessCode());
             return;
         } else if (appInfo.getData().getPackageName() == null) {
-            logger.info(appName + "doesn't exist on PAXSTORE. Create new application.");
+            logger.info(pkgName + " doesn't exist on PAXSTORE. Create new application.");
         } else {
-            logger.info(appName + "exists on PAXSTORE. Upload new version.");
+            logger.info(pkgName + " exists on PAXSTORE. Upload new version.");
             exist = true;
         }
-
-        // load the config file to get all parameters for uploadApk
-//        CreateApkRequest createApkRequest = new CreateApkRequest();
-//        createApkRequest.setAppFile(FileUtils.createUploadFile(appFilePath));
-
-
-
-
     }
 
     public static Option createOption(String shortName, String longName, String argName, String description, boolean required) {
