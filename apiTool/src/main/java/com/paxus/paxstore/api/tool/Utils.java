@@ -13,10 +13,9 @@ public class Utils {
      * Unzips a given ZIP file into the same directory and returns the extracted files.
      *
      * @param zipFilePath Path to the ZIP file.
-     * @return An array of extracted files.
      * @throws IOException if an I/O error occurs.
      */
-    public static File[] unzip(String zipFilePath) throws IOException {
+    public static void unzip(String zipFilePath) throws IOException {
         File zipFile = new File(zipFilePath);
         String destDir = zipFile.getParent(); // Extract to the same directory
 
@@ -35,7 +34,6 @@ public class Utils {
                 zis.closeEntry();
             }
         }
-        return destFolder.listFiles((dir, name) -> !name.equals(zipFile.getName())); // Return extracted files
     }
 
     /**
@@ -106,11 +104,11 @@ public class Utils {
                 } else if (file.getName().endsWith(suffix)) {
                     String what = "wrong";
                     // double check the file is correct: use file name or parent name
-                    if (suffix.equals(".apk") && file.getParent().equals("apk")) {
+                    if (suffix.equals(".apk") && file.getParentFile().getName().equals("apk")) {
                         what = "apk";
-                    } else if (suffix.equals(".zip") && file.getParent().equals("paxstore templates")) {
+                    } else if (suffix.equals(".zip") && file.getParentFile().getName().equals("paxstore templates")) {
                         what = "parameter";
-                    } else if (suffix.equals(".txt") && file.getName().equals("ReleaseNote.txt")) {
+                    } else if (suffix.equals("ReleaseNote.txt")) {
                         what = "release note";
                     }
                     App.logger.debug("found " + what + " file" + (what.equals("wrong") ? ", pass" : (": " + file.getAbsolutePath())));

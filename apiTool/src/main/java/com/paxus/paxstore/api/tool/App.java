@@ -28,14 +28,15 @@ import java.util.stream.Collectors;
 
 public class App {
     public static final Logger logger = LoggerFactory.getLogger(App.class);
-    public static final String releaseFolderPath = "release-folder.zip";
+    public static final String releaseFolderPath = "apiTool/src/main/release-folder";
+    public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
     public static final String cfgFolderPath = "cfg";
     public static final String[] commands = new String[]{"main", "getAppInfo", "uploadApk"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, command;
     static DeveloperApi developerApi;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         /**
          * arguments:
          * [--key] api key: github secret
@@ -129,8 +130,9 @@ public class App {
         }
     }
 
-    public static void executeMain() {
+    public static void executeMain() throws IOException {
         // getAppInfo and check if app exists
+        logger.info("start getAppInfoByName");
         boolean appExist = false;
         AppDetailDTO appInfo = getAppInfoByName();
         if (appInfo == null) {
@@ -140,6 +142,11 @@ public class App {
         }
 
         // upload apk
+        logger.info("start uploadApk");
+        String data = uploadApk();
+        if (data != null) {
+            logger.info("message: " + data);
+        }
     }
 
     public static void executeGetAppInfo() {
@@ -149,8 +156,11 @@ public class App {
         }
     }
 
-    public static void executeUploadApk() {
-
+    public static void executeUploadApk() throws IOException {
+        String data = uploadApk();
+        if (data != null) {
+            logger.info("message: " + data);
+        }
     }
 
     public static Option createOption(String shortName, String longName, String argName, String description, boolean hasArg, boolean required) {
@@ -166,7 +176,7 @@ public class App {
     public static AppDetailDTO getAppInfoByName() {
         Result<AppDetailDTO> appInfo = developerApi.getAppInfoByName(pkgName, appName);
         if (appInfo == null) {
-            logger.error("get app info by name error.");
+            logger.error("call getAppInfoByName API error.");
             return null;
         } else if (appInfo.getBusinessCode() != 0) {
             logger.error("get app info failed. error code: " + appInfo.getBusinessCode());
@@ -179,27 +189,24 @@ public class App {
         return appInfo.getData();
     }
 
-    public static Result<String> uploadApk(DeveloperApi developerApi, String appName, String pkgName) throws IOException {
-        // prepare unzip release folder
-        File zipFile = new File(releaseFolderPath);
-        String destDir = zipFile.getParent(); // Extract in the same directory
-        File[] extractedFiles;
-
-        // unzip
+    public static String uploadApk() throws IOException {
+        // unzip release folder
         try {
-            extractedFiles = Utils.unzip(releaseFolderPath); // Unpack
+            FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
+            Utils.unzip(releaseFolderZipPath); //  unzip
         } catch (IOException e) {
             logger.error(e.getMessage());
             return null;
         }
-        if (extractedFiles.length != 1) {
-            logger.error("unpack the wrong release folder.");
-            return null;
-        }
 
         // get file path from release folder
+        File releaseFolder = new File(releaseFolderPath);
+        if (!releaseFolder.exists()) {
+            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
+            return null;
+        }
         String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote.txt", paramSuffix = ".zip";
-        File releaseFolder = extractedFiles[0];
+
         List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
         List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
@@ -217,33 +224,43 @@ public class App {
             return null;
         }
         String releaseNote = Utils.readFileToString(releaseNoteFilePaths.get(0));
-        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
-        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
-            logger.error("Parameter app but no param file found.");
-            return null;
-        }
+//        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+//        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+//            logger.error("Parameter app but no param file found.");
+//            return null;
+//        }
         List<UploadedFileContent> paramTemplateList = paramFilePaths.stream()
                 .map(FileUtils::createUploadFile)
                 .collect(Collectors.toList());
 
         CreateApkRequest createApkRequest = new CreateApkRequest();
-//        createApkRequest.setAppFile(FileUtils.createUploadFile(apkFilePath));
-//        createApkRequest.setAppName(appName);
+        createApkRequest.setAppFile(FileUtils.createUploadFile(apkFilePath));
+        createApkRequest.setAppName(appName);
 //        createApkRequest.setBaseType(baseType);
 //        createApkRequest.setShortDesc(shortDesc);
 //        createApkRequest.setDescription(fullDesc);
-//        createApkRequest.setReleaseNotes(releaseNote);
+        createApkRequest.setReleaseNotes(releaseNote);
 //        createApkRequest.setChargeType(chargeType);
 //
 //        createApkRequest.setCategoryList(categoryList);
 //        createApkRequest.setModelNameList(modelNameList);
 //        createApkRequest.setScreenshotFileList(screenshotList);
-//        createApkRequest.setParamTemplateFileList(paramTemplateList);
-//
-//
+        createApkRequest.setParamTemplateFileList(paramTemplateList);
+
+
 //        createApkRequest.setFeaturedImgFile(FileUtils.createUploadFile(featuredImgFilePath));
 //        createApkRequest.setIconFile(FileUtils.createUploadFile(iconFilePaTH));
 
-        return developerApi.uploadApk(createApkRequest);
+        Result<String> result = developerApi.uploadApk(createApkRequest);
+        if (result == null) {
+            logger.error("call uploadApk API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("upload apk failed. error code: " + result.getBusinessCode());
+            return null;
+        } else {
+            logger.info("upload apk success.");
+        }
+        return result.getData();
     }
 }
