@@ -1,5 +1,0 @@
-Test release note file. This should be available on github workflow after app build is finished.
-App Version: :)
-1. item1
-2. item2
-3. item3
