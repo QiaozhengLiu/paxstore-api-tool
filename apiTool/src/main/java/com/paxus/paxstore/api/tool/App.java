@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class App {
-    public static final Logger logger = LoggerFactory.getLogger(App.class);
+    public static final Logger logger = LoggerFactory.getLogger("ApiTool");
     public static final String releaseFolderPath = "apiTool/src/main/release-folder";
     public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
     public static final String cfgFolderPath = "apiTool/src/main/cfg/";
@@ -230,7 +230,7 @@ public class App {
             logger.error("Parameter app but no param file found.");
             return null;
         }
-        List<UploadedFileContent> paramTemplateList = Utils.convertFilePaths(paramFilePaths);
+        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         // other info, read from cfg
         // TODO: cfg validation
@@ -242,7 +242,7 @@ public class App {
 
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
-        createApkRequest.setAppFile(FileUtils.createUploadFile(apkFilePath));
+        createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
         createApkRequest.setAppName(appName);
         createApkRequest.setBaseType(baseType);
         createApkRequest.setShortDesc(cfg.shortDesc);
@@ -251,10 +251,10 @@ public class App {
         createApkRequest.setChargeType(cfg.chargeType);
         createApkRequest.setCategoryList(cfg.categoryList);
         createApkRequest.setModelNameList(cfg.modelNameList);
-        createApkRequest.setScreenshotFileList(Utils.convertFilePaths(cfg.screenshotFilePaths));
+        createApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.screenshotFilePaths));
         createApkRequest.setParamTemplateFileList(paramTemplateList);
-        createApkRequest.setFeaturedImgFile(FileUtils.createUploadFile(cfg.featureImgFilePath));
-        createApkRequest.setIconFile(FileUtils.createUploadFile(cfg.iconFilePath));
+        createApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.featureImgFilePath));
+        createApkRequest.setIconFile(Utils.createUploadFile(cfg.iconFilePath));
 
         // send request
         Result<String> result;

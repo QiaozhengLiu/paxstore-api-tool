@@ -112,10 +112,27 @@ public class Utils {
      * @param filePaths a list of file path, String
      * @return a list of uploaded file content, UploadedFileContent
      */
-    public static List<UploadedFileContent> convertFilePaths(List<String> filePaths) {
+    public static List<UploadedFileContent> createUploadFiles(List<String> filePaths) {
         return filePaths.stream()
-                .map(path -> FileUtils.createUploadFile(App.cfgFolderPath + path))
+                .map(Utils::createUploadFile)
                 .collect(Collectors.toList());
+
+    }
+
+    /**
+     * FileUtils.createUploadFile and validate file path
+     * @param filePath file path
+     * @return  UploadedFileContent for a single file
+     */
+    public static UploadedFileContent createUploadFile(String filePath) {
+        if (!new File(filePath).exists()) {  // cfg only has file name
+            filePath = App.cfgFolderPath + filePath;
+        }
+        if (!new File(filePath).exists()) {  // check again
+            App.logger.error(filePath + " doesn't exist.");
+            return null;
+        }
+        return FileUtils.createUploadFile(filePath);
     }
 }
 
