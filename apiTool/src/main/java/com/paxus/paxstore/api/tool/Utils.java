@@ -1,5 +1,16 @@
 package com.paxus.paxstore.api.tool;
 
+import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_NORMAL;
+import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_PARAMETER;
+import static com.paxus.paxstore.api.tool.App.appName;
+import static com.paxus.paxstore.api.tool.App.cfgFolderPath;
+import static com.paxus.paxstore.api.tool.App.cfgJson;
+import static com.paxus.paxstore.api.tool.App.logger;
+import static com.paxus.paxstore.api.tool.App.pkgName;
+import static com.paxus.paxstore.api.tool.App.releaseFolderPath;
+
+import com.pax.market.api.sdk.java.api.developer.dto.CreateApkRequest;
+import com.pax.market.api.sdk.java.api.developer.dto.step.CreateSingleApkRequest;
 import com.pax.market.api.sdk.java.api.io.UploadedFileContent;
 import com.pax.market.api.sdk.java.api.util.FileUtils;
 
@@ -60,6 +71,7 @@ public class Utils {
     /**
      * Recursively lists all files in a directory, and match file.
      * Use suffix to match files: .apk, .zip, .txt
+     *
      * @param folder root folder
      * @param suffix suffix
      * @return matched file paths
@@ -68,7 +80,7 @@ public class Utils {
         List<String> res = new ArrayList<>();
 
         if (folder == null || !folder.exists()) {
-            App.logger.debug("folder does not exist: " + (folder != null ? folder.getAbsolutePath() : "null"));
+            logger.debug("folder does not exist: " + (folder != null ? folder.getAbsolutePath() : "null"));
             return res;
         }
         File[] files = folder.listFiles();
@@ -86,7 +98,7 @@ public class Utils {
                     } else if (suffix.equals("ReleaseNote.txt")) {
                         what = "release note";
                     }
-                    App.logger.debug("found " + what + " file" + (what.equals("wrong") ? ", pass" : (": " + file.getAbsolutePath())));
+                    logger.debug("found " + what + " file" + (what.equals("wrong") ? ", pass" : (": " + file.getAbsolutePath())));
                     if (!what.equals("wrong")) {
                         res.add(file.getAbsolutePath());
                     }
@@ -98,6 +110,7 @@ public class Utils {
 
     /**
      * Read all content in a file to a string.
+     *
      * @param filePath file path
      * @return string
      * @throws IOException
@@ -109,6 +122,7 @@ public class Utils {
 
     /**
      * Convert file path list to upload file content list used on paxstore api.
+     *
      * @param filePaths a list of file path, String
      * @return a list of uploaded file content, UploadedFileContent
      */
@@ -121,18 +135,184 @@ public class Utils {
 
     /**
      * FileUtils.createUploadFile and validate file path
+     *
      * @param filePath file path
-     * @return  UploadedFileContent for a single file
+     * @return UploadedFileContent for a single file
      */
     public static UploadedFileContent createUploadFile(String filePath) {
         if (!new File(filePath).exists()) {  // cfg only has file name
-            filePath = App.cfgFolderPath + filePath;
+            filePath = cfgFolderPath + filePath;
         }
         if (!new File(filePath).exists()) {  // check again
-            App.logger.error(filePath + " doesn't exist.");
+            logger.error(filePath + " doesn't exist.");
             return null;
         }
         return FileUtils.createUploadFile(filePath);
     }
-}
 
+    /**
+     * Create Apk request. Used for uploadApk
+     *
+     * @return CreateApkRequest
+     */
+    public static CreateApkRequest createApkRequest() throws IOException {
+        // unzip release folder
+        try {
+            FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
+            Utils.unzip(App.releaseFolderZipPath); //  unzip
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+
+        // get file path from release folder
+        File releaseFolder = new File(releaseFolderPath);
+        if (!releaseFolder.exists()) {
+            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
+            return null;
+        }
+        String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote.txt", paramSuffix = ".zip";
+
+        List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
+        List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
+        List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
+        // TODO: what about automation? can be more than one apk file collected? Only one app now
+        // TODO: matrix build, release and automation are two 'build' step, but share one 'release' step
+
+        // apk file path, release note, param template list
+        if (apkFilePaths.size() != 1) {
+            logger.error("There should only be one apk file. Found: " + apkFilePaths);
+            return null;
+        }
+        String apkFilePath = apkFilePaths.get(0);
+        if (releaseNoteFilePaths.size() != 1) {
+            logger.error("There should only be one release note file. Found: " + releaseNoteFilePaths);
+            return null;
+        }
+        String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
+        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
+        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
+
+        // other info, read from cfg
+        // TODO: cfg validation
+        Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
+        if (cfg == null) {
+            logger.error("load " + cfgJson + " failed.");
+            return null;
+        }
+
+        // create request
+        CreateApkRequest createApkRequest = new CreateApkRequest();
+        createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
+        createApkRequest.setAppName(appName);
+        createApkRequest.setBaseType(baseType);
+        createApkRequest.setShortDesc(cfg.shortDesc);
+        createApkRequest.setDescription(cfg.fullDesc);
+        createApkRequest.setReleaseNotes(releaseNote);
+        createApkRequest.setChargeType(cfg.chargeType);
+        createApkRequest.setCategoryList(cfg.categoryList);
+        createApkRequest.setModelNameList(cfg.modelNameList);
+        createApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.screenshotFilePaths));
+        createApkRequest.setParamTemplateFileList(paramTemplateList);
+        createApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.featureImgFilePath));
+        createApkRequest.setIconFile(Utils.createUploadFile(cfg.iconFilePath));
+
+        return createApkRequest;
+    }
+
+    /**
+     * Create Single Apk request. Used for createApk
+     * diff from createApkRequest: id, setApkName, setApkType
+     *
+     * @return CreateSingleApkRequest
+     */
+    public static CreateSingleApkRequest createSingleApkRequest(long id) throws IOException {
+        // unzip release folder
+        try {
+            FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
+            Utils.unzip(App.releaseFolderZipPath); //  unzip
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+
+        // get file path from release folder
+        File releaseFolder = new File(releaseFolderPath);
+        if (!releaseFolder.exists()) {
+            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
+            return null;
+        }
+        String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote.txt", paramSuffix = ".zip";
+
+        List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
+        List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
+        List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
+        // TODO: what about automation? can be more than one apk file collected? Only one app now
+        // TODO: matrix build, release and automation are two 'build' step, but share one 'release' step
+
+        // apk file path, release note, param template list
+        if (apkFilePaths.size() != 1) {
+            logger.error("There should only be one apk file. Found: " + apkFilePaths);
+            return null;
+        }
+        String apkFilePath = apkFilePaths.get(0);
+        if (releaseNoteFilePaths.size() != 1) {
+            logger.error("There should only be one release note file. Found: " + releaseNoteFilePaths);
+            return null;
+        }
+        String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
+        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
+        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
+
+        // other info, read from cfg
+        // TODO: cfg validation
+        Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
+        if (cfg == null) {
+            logger.error("load " + cfgJson + " failed.");
+            return null;
+        }
+
+        // create request
+        CreateSingleApkRequest singleApkRequest = new CreateSingleApkRequest();
+        singleApkRequest.setAppId(id);
+        singleApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
+        singleApkRequest.setApkName(appName);
+        singleApkRequest.setApkType(baseType);
+        singleApkRequest.setShortDesc(cfg.shortDesc);
+        singleApkRequest.setDescription(cfg.fullDesc);
+        singleApkRequest.setReleaseNotes(releaseNote);
+        singleApkRequest.setChargeType(cfg.chargeType);
+        singleApkRequest.setCategoryList(cfg.categoryList);
+        singleApkRequest.setModelNameList(cfg.modelNameList);
+        singleApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.screenshotFilePaths));
+        singleApkRequest.setParamTemplateFileList(paramTemplateList);
+        singleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.featureImgFilePath));
+        singleApkRequest.setIconFile(Utils.createUploadFile(cfg.iconFilePath));
+        return singleApkRequest;
+    }
+
+    /**
+     * Read user input
+     * @param prompt prompt
+     * @return input
+     */
+    public static String input(String prompt) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            System.out.print(prompt);
+            String input = reader.readLine();  // Read user input
+            logger.info("You entered: " + input);
+            return input;
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+        return "";
+    }
+}

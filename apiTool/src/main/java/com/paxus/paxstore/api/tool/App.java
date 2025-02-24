@@ -1,14 +1,8 @@
 package com.paxus.paxstore.api.tool;
 
-import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_NORMAL;
-import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_PARAMETER;
-
 import com.pax.market.api.sdk.java.api.base.dto.AppDetailDTO;
 import com.pax.market.api.sdk.java.api.base.dto.Result;
 import com.pax.market.api.sdk.java.api.developer.DeveloperApi;
-import com.pax.market.api.sdk.java.api.developer.dto.CreateApkRequest;
-import com.pax.market.api.sdk.java.api.io.UploadedFileContent;
-import com.pax.market.api.sdk.java.api.util.FileUtils;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -20,11 +14,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class App {
     public static final Logger logger = LoggerFactory.getLogger("ApiTool");
@@ -32,46 +22,12 @@ public class App {
     public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
     public static final String cfgFolderPath = "apiTool/src/main/cfg/";
     public static final String cfgJson = "paxstore-api-cfg.json";
-    public static final String[] commands = new String[]{"main", "getAppInfo", "uploadApk"};
+    public static final String[] commands = new String[]{"main", "getAppInfo", "uploadApk", "createApk"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, command;
     static DeveloperApi developerApi;
 
-    public static void main(String[] args) throws IOException {
-        /**
-         * arguments:
-         * [--key] api key: github secret
-         * [--secret] api secret: github secret
-         * [--url] url: global paxstore, github secret?
-         * [--app] app name:
-         * [--package] package name:
-         * required configs when upload:
-         * [paths]
-         * - apk
-         * - release note
-         * - param template
-         * optional configs when upload:
-         * [paths]
-         * - screenshot
-         * - feature image
-         * - app icon
-         * [string]
-         * - basetype
-         * - short desc
-         * - desc
-         * - charge type
-         * - category list
-         * - model name list
-         */
-
-        /** workflow
-         * 1. getAppInfoByName(packageName, appName)
-         * 2.1. businessCode = 0: has app, need only required configs
-         * 2.2. businessCode != 0: new app, need all required and optional
-         * 3. If any config missed, don't upload, failed
-         *    else, uploadApk(createApkRequest), return the upload result
-         */
-
+    public static void main(String[] args) {
         // print log to stdout
         System.setProperty("org.slf4j.simpleLogger.logFile", "System.out");
 
@@ -126,12 +82,18 @@ public class App {
             case "uploadApk":
                 executeUploadApk();
                 break;
+            case "createApk":
+                executeCreateApk();
+                break;
+            case "deleteApk":
+                executeDeleteApk();
+                break;
             default:
                 logger.error("Not a valid command. Available commands: " + Arrays.toString(commands));
         }
     }
 
-    public static void executeMain() throws IOException {
+    public static void executeMain() {
         // getAppInfo and check if app exists
         logger.info("start getAppInfoByName");
         boolean appExist = false;
@@ -157,23 +119,37 @@ public class App {
         }
     }
 
-    public static void executeUploadApk() throws IOException {
+    public static void executeUploadApk() {
         String data = uploadApk();
         if (data != null) {
             logger.info("message: " + data);
         }
     }
 
-    public static Option createOption(String shortName, String longName, String argName, String description, boolean hasArg, boolean required) {
-        return Option.builder(shortName)
-                .longOpt(longName)
-                .argName(argName)
-                .desc(description)
-                .hasArg(hasArg)
-                .required(required)
-                .build();
+    public static void executeCreateApk() {
+        Long id = createApk();
+        if (id != null) {
+            logger.info("created apk id: " + id);
+        }
+    }
+    public static void executeDeleteApk() {
+        long id;
+        try {
+            id = Long.parseLong(Utils.input("Please input apk id\n"));
+        } catch (NumberFormatException e) {
+            logger.error("not a valid id.");
+            return;
+        }
+        String data = deleteApk(id);
+        if (data != null) {
+            logger.info("message: " + data);
+        }
     }
 
+    /**
+     * call getAppInfoByName and check
+     * @return appInfo if success, else null
+     */
     public static AppDetailDTO getAppInfoByName() {
         Result<AppDetailDTO> appInfo = developerApi.getAppInfoByName(pkgName, appName);
         if (appInfo == null) {
@@ -183,83 +159,23 @@ public class App {
             logger.error("get app info failed. error code: " + appInfo.getBusinessCode() + ", error message: " + appInfo.getMessage());
             return null;
         } else if (appInfo.getData().getPackageName() == null) {
-            logger.info(pkgName + " doesn't exist on PAXSTORE.");
+            logger.info(appName + "(" + pkgName + ") " + "doesn't exist on PAXSTORE. Check the app name and the package name.");
         } else {
-            logger.info(pkgName + " exists on PAXSTORE.");
+            logger.info(appName + "(" + pkgName + ") " + "exists on PAXSTORE.");
         }
         return appInfo.getData();
     }
 
-    public static String uploadApk() throws IOException {
-        // unzip release folder
-        try {
-            FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
-            Utils.unzip(releaseFolderZipPath); //  unzip
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-            return null;
-        }
-
-        // get file path from release folder
-        File releaseFolder = new File(releaseFolderPath);
-        if (!releaseFolder.exists()) {
-            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
-            return null;
-        }
-        String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote.txt", paramSuffix = ".zip";
-
-        List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
-        List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
-        List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
-        // TODO: what about automation? can be more than one apk file collected? Only one app now
-        // TODO: matrix build, release and automation are two 'build' step, but share one 'release' step
-
-        // apk file path, release note, param template list
-        if (apkFilePaths.size() != 1) {
-            logger.error("There should only be one apk file. Found: " + apkFilePaths);
-            return null;
-        }
-        String apkFilePath = apkFilePaths.get(0);
-        if (releaseNoteFilePaths.size() != 1) {
-            logger.error("There should only be one release note file. Found: " + releaseNoteFilePaths);
-            return null;
-        }
-        String releaseNote = Utils.loadFileToString(releaseNoteFilePaths.get(0));
-        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
-        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
-            logger.error("Parameter app but no param file found.");
-            return null;
-        }
-        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
-
-        // other info, read from cfg
-        // TODO: cfg validation
-        Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
-        if (cfg == null) {
-            logger.error("load " + cfgJson + " failed.");
-            return null;
-        }
-
-        // create request
-        CreateApkRequest createApkRequest = new CreateApkRequest();
-        createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
-        createApkRequest.setAppName(appName);
-        createApkRequest.setBaseType(baseType);
-        createApkRequest.setShortDesc(cfg.shortDesc);
-        createApkRequest.setDescription(cfg.fullDesc);
-        createApkRequest.setReleaseNotes(releaseNote);
-        createApkRequest.setChargeType(cfg.chargeType);
-        createApkRequest.setCategoryList(cfg.categoryList);
-        createApkRequest.setModelNameList(cfg.modelNameList);
-        createApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.screenshotFilePaths));
-        createApkRequest.setParamTemplateFileList(paramTemplateList);
-        createApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.featureImgFilePath));
-        createApkRequest.setIconFile(Utils.createUploadFile(cfg.iconFilePath));
-
-        // send request
+    /**
+     * call uploadApk and check
+     * this will create app if doesn't exist, upload the apk, and submit for approval
+     * app is in 'pending status'
+     * @return upload message if success, else null
+     */
+    public static String uploadApk() {
         Result<String> result;
         try {
-            result = developerApi.uploadApk(createApkRequest);
+            result = developerApi.uploadApk(Utils.createApkRequest());
         } catch (Exception e) {
             logger.error(e.getMessage());
             return null;
@@ -274,5 +190,71 @@ public class App {
             logger.info("upload apk success.");
         }
         return result.getData();
+    }
+
+    /**
+     * call getAppinfo to get id, and createApk, and check
+     * this will only upload the apk, not submitted for approval yet
+     * app is in 'draft' status
+     * @return apk id if success, else null
+     */
+    public static Long createApk() {
+        AppDetailDTO appInfo = getAppInfoByName();
+        if (appInfo == null || appInfo.getId() == null) {
+            logger.error("get app id failed, cannot create apk");
+            return null;
+        }
+        long id = appInfo.getId();
+        Result<Long> result;
+        try {
+            result = developerApi.createApk(Utils.createSingleApkRequest(id));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+        if (result == null) {
+            logger.error("call create API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("create apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
+            return null;
+        } else {
+            logger.info("create apk success.");
+        }
+        return result.getData();
+    }
+
+    /**
+     * call deleteApk to delete a draft apk
+     * id is input by user during runtime
+     * should be used after createApk which returns an apk id
+     * @param id apk id
+     * @return response if delete success, else null
+     */
+    public static String deleteApk(long id) {
+        Result<String> result = developerApi.deleteApk(id);
+        if (result == null) {
+            logger.error("call deleteApk API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("delete apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
+            return null;
+        } else {
+            logger.info("delete apk success.");
+            return result.getData();
+        }
+    }
+
+    /**
+     * helper to create option
+     */
+    public static Option createOption(String shortName, String longName, String argName, String description, boolean hasArg, boolean required) {
+        return Option.builder(shortName)
+                .longOpt(longName)
+                .argName(argName)
+                .desc(description)
+                .hasArg(hasArg)
+                .required(required)
+                .build();
     }
 }
