@@ -30,7 +30,8 @@ public class App {
     public static final Logger logger = LoggerFactory.getLogger(App.class);
     public static final String releaseFolderPath = "apiTool/src/main/release-folder";
     public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
-    public static final String cfgFolderPath = "cfg";
+    public static final String cfgFolderPath = "apiTool/src/main/cfg/";
+    public static final String cfgJson = "paxstore-api-cfg.json";
     public static final String[] commands = new String[]{"main", "getAppInfo", "uploadApk"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, command;
@@ -179,7 +180,7 @@ public class App {
             logger.error("call getAppInfoByName API error.");
             return null;
         } else if (appInfo.getBusinessCode() != 0) {
-            logger.error("get app info failed. error code: " + appInfo.getBusinessCode());
+            logger.error("get app info failed. error code: " + appInfo.getBusinessCode() + ", error message: " + appInfo.getMessage());
             return null;
         } else if (appInfo.getData().getPackageName() == null) {
             logger.info(pkgName + " doesn't exist on PAXSTORE.");
@@ -223,40 +224,51 @@ public class App {
             logger.error("There should only be one release note file. Found: " + releaseNoteFilePaths);
             return null;
         }
-        String releaseNote = Utils.readFileToString(releaseNoteFilePaths.get(0));
-//        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
-//        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
-//            logger.error("Parameter app but no param file found.");
-//            return null;
-//        }
-        List<UploadedFileContent> paramTemplateList = paramFilePaths.stream()
-                .map(FileUtils::createUploadFile)
-                .collect(Collectors.toList());
+        String releaseNote = Utils.loadFileToString(releaseNoteFilePaths.get(0));
+        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
+        List<UploadedFileContent> paramTemplateList = Utils.convertFilePaths(paramFilePaths);
 
+        // other info, read from cfg
+        // TODO: cfg validation
+        Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
+        if (cfg == null) {
+            logger.error("load " + cfgJson + " failed.");
+            return null;
+        }
+
+        // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(FileUtils.createUploadFile(apkFilePath));
         createApkRequest.setAppName(appName);
-//        createApkRequest.setBaseType(baseType);
-//        createApkRequest.setShortDesc(shortDesc);
-//        createApkRequest.setDescription(fullDesc);
+        createApkRequest.setBaseType(baseType);
+        createApkRequest.setShortDesc(cfg.shortDesc);
+        createApkRequest.setDescription(cfg.fullDesc);
         createApkRequest.setReleaseNotes(releaseNote);
-//        createApkRequest.setChargeType(chargeType);
-//
-//        createApkRequest.setCategoryList(categoryList);
-//        createApkRequest.setModelNameList(modelNameList);
-//        createApkRequest.setScreenshotFileList(screenshotList);
+        createApkRequest.setChargeType(cfg.chargeType);
+        createApkRequest.setCategoryList(cfg.categoryList);
+        createApkRequest.setModelNameList(cfg.modelNameList);
+        createApkRequest.setScreenshotFileList(Utils.convertFilePaths(cfg.screenshotFilePaths));
         createApkRequest.setParamTemplateFileList(paramTemplateList);
+        createApkRequest.setFeaturedImgFile(FileUtils.createUploadFile(cfg.featureImgFilePath));
+        createApkRequest.setIconFile(FileUtils.createUploadFile(cfg.iconFilePath));
 
-
-//        createApkRequest.setFeaturedImgFile(FileUtils.createUploadFile(featuredImgFilePath));
-//        createApkRequest.setIconFile(FileUtils.createUploadFile(iconFilePaTH));
-
-        Result<String> result = developerApi.uploadApk(createApkRequest);
+        // send request
+        Result<String> result;
+        try {
+            result = developerApi.uploadApk(createApkRequest);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return null;
+        }
         if (result == null) {
             logger.error("call uploadApk API error.");
             return null;
         } else if (result.getBusinessCode() != 0) {
-            logger.error("upload apk failed. error code: " + result.getBusinessCode());
+            logger.error("upload apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
         } else {
             logger.info("upload apk success.");

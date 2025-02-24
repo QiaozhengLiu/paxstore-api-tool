@@ -1,0 +1,12 @@
+{
+  "com.test_paxstore_developer_api": {
+    "chargeType": 0,
+    "shortDesc": "test short description",
+    "fullDesc": "test description\nitem1\nitem2\nitem3",
+    "categoryList": ["A920", "A80", "A6650"],
+    "modelNameList": ["GYL_DK", "WL_PS", "SH_HY"],
+    "screenshotFilePaths": ["screenshot0.png", "screenshot1.png", "screenshot2.png"],
+    "featureImgFilePath": "feature.png",
+    "iconFilePath": "icon.png"
+  }
+}

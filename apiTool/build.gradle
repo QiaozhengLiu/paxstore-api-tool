@@ -37,4 +37,5 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.16'
     implementation 'org.slf4j:slf4j-simple:2.0.16'  // Add a logging backend
     implementation 'commons-cli:commons-cli:1.9.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
 }

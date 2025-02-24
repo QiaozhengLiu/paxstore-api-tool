@@ -1,10 +1,14 @@
 package com.paxus.paxstore.api.tool;
 
+import com.pax.market.api.sdk.java.api.io.UploadedFileContent;
+import com.pax.market.api.sdk.java.api.util.FileUtils;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.*;
 
 public class Utils {
@@ -54,35 +58,6 @@ public class Utils {
     }
 
     /**
-     * Processes the extracted files.
-     *
-     * @param files An array of extracted files.
-     */
-    public static void processFiles(File[] files) {
-        if (files == null) return;
-        for (File file : files) {
-            System.out.println("Processing: " + file.getAbsolutePath());
-            // Add file processing logic here
-        }
-    }
-
-    /**
-     * Deletes the extracted files after use.
-     *
-     * @param files An array of files to delete.
-     */
-    public static void deleteFiles(File[] files) {
-        if (files == null) return;
-        for (File file : files) {
-            if (file.isDirectory()) {
-                deleteFiles(file.listFiles()); // Recursively delete directories
-            }
-            System.out.println("Deleting: " + file.getAbsolutePath());
-            file.delete();
-        }
-    }
-
-    /**
      * Recursively lists all files in a directory, and match file.
      * Use suffix to match files: .apk, .zip, .txt
      * @param folder root folder
@@ -127,9 +102,20 @@ public class Utils {
      * @return string
      * @throws IOException
      */
-    public static String readFileToString(String filePath) throws IOException {
+    public static String loadFileToString(String filePath) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(filePath));
         return String.join("\n", lines);
+    }
+
+    /**
+     * Convert file path list to upload file content list used on paxstore api.
+     * @param filePaths a list of file path, String
+     * @return a list of uploaded file content, UploadedFileContent
+     */
+    public static List<UploadedFileContent> convertFilePaths(List<String> filePaths) {
+        return filePaths.stream()
+                .map(path -> FileUtils.createUploadFile(App.cfgFolderPath + path))
+                .collect(Collectors.toList());
     }
 }
 
