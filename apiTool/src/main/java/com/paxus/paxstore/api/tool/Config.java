@@ -1,5 +1,7 @@
 package com.paxus.paxstore.api.tool;
 
+import static com.paxus.paxstore.api.tool.App.logger;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,7 +29,7 @@ public class Config {
             Map<String, Config> data = objectMapper.readValue(new File(filePath), new TypeReference<Map<String, Config>>() {});
             return data.getOrDefault(pkgName, null);
         } catch (IOException e) {
-            App.logger.error(e.getMessage());
+            logger.error(e.getMessage());
         }
         return null;
     }

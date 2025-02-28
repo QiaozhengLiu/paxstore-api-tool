@@ -22,7 +22,7 @@ public class App {
     public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
     public static final String cfgFolderPath = "apiTool/src/main/cfg/";
     public static final String cfgJson = "paxstore-api-cfg.json";
-    public static final String[] commands = new String[]{"main", "getAppInfo", "uploadApk", "createApk"};
+    public static final String[] commands = new String[]{"main", "getappInfo", "uploadapk", "createapk"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, command;
     static DeveloperApi developerApi;
@@ -72,20 +72,20 @@ public class App {
 
         // developer api
         developerApi = new DeveloperApi(apiUrl, apiKey, apiSecret);
-        switch (command) {
+        switch (command.toLowerCase()) {
             case "main":
                 executeMain();
                 break;
-            case "getAppInfo":
+            case "getappinfo":
                 executeGetAppInfo();
                 break;
-            case "uploadApk":
+            case "uploadapk":
                 executeUploadApk();
                 break;
-            case "createApk":
+            case "createapk":
                 executeCreateApk();
                 break;
-            case "deleteApk":
+            case "deleteapk":
                 executeDeleteApk();
                 break;
             default:
@@ -132,6 +132,7 @@ public class App {
             logger.info("created apk id: " + id);
         }
     }
+
     public static void executeDeleteApk() {
         long id;
         try {
