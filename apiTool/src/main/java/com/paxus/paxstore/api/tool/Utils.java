@@ -14,6 +14,13 @@ import com.pax.market.api.sdk.java.api.developer.dto.step.CreateSingleApkRequest
 import com.pax.market.api.sdk.java.api.io.UploadedFileContent;
 import com.pax.market.api.sdk.java.api.util.FileUtils;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -313,5 +320,21 @@ public class Utils {
             logger.error(e.getMessage());
         }
         return "";
+    }
+
+    /**
+     * Check if the parameter has the helper option.
+     * @param args  args
+     * @param helpOption  helper option
+     * @return true if param is empty or param has the helper option, else false
+     */
+    public static boolean hasHelpOption(String[] args, Option helpOption) throws ParseException {
+        boolean hasHelp = false;
+        Options options = new Options();
+        options.addOption(helpOption);
+        if (args.length == 0 || new DefaultParser().parse(options, args).hasOption(helpOption)) {
+            hasHelp = true;
+        }
+        return hasHelp;
     }
 }

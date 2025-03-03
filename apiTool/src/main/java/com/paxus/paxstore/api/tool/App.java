@@ -52,13 +52,13 @@ public class App {
         try {
             CommandLineParser commandLineParser = new DefaultParser();
             HelpFormatter formatter = new HelpFormatter();
-            CommandLine cmd = commandLineParser.parse(options, args);
-            // TODO: only -h should also work
-            if (cmd.hasOption(helpOption)) {
-                formatter.printHelp("paxstore api tool", options);
+            // show helper message
+            if (Utils.hasHelpOption(args, helpOption)) {
+                formatter.printHelp("java -jar /path/to/apiTool.jar", options);
                 return;
             }
 
+            CommandLine cmd = commandLineParser.parse(options, args);
             apiKey = cmd.getOptionValue(keyOption);
             apiSecret = cmd.getOptionValue(secretOption);
             apiUrl = cmd.getOptionValue(urlOption);
