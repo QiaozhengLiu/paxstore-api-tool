@@ -67,83 +67,92 @@ public class App {
             command = cmd.getOptionValue(commandOption);
         } catch (ParseException e) {
             logger.error(e.getMessage());
-            return;
+            System.exit(1);
         }
 
         // developer api
         developerApi = new DeveloperApi(apiUrl, apiKey, apiSecret);
+        int exeResult = 1;
         switch (command.toLowerCase()) {
             case "main":
-                executeMain();
+                exeResult = executeMain();
                 break;
             case "getappinfo":
-                executeGetAppInfo();
+                exeResult = executeGetAppInfo();
                 break;
             case "uploadapk":
-                executeUploadApk();
+                exeResult = executeUploadApk();
                 break;
             case "createapk":
-                executeCreateApk();
+                exeResult = executeCreateApk();
                 break;
             case "deleteapk":
-                executeDeleteApk();
+                exeResult = executeDeleteApk();
                 break;
             default:
                 logger.error("Not a valid command. Available commands: " + Arrays.toString(commands));
         }
+        System.exit(exeResult);
     }
 
-    public static void executeMain() {
+    public static int executeMain() {
         // getAppInfo and check if app exists
         logger.info("start getAppInfoByName");
-        boolean appExist = false;
         AppDetailDTO appInfo = getAppInfoByName();
-        if (appInfo == null) {
-            return;
-        } else {
-            appExist = (appInfo.getPackageName() != null);
-        }
 
         // upload apk
         logger.info("start uploadApk");
         String data = uploadApk();
         if (data != null) {
             logger.info("message: " + data);
+            return 0;
+        } else {
+            return 1;
         }
     }
 
-    public static void executeGetAppInfo() {
+    public static int executeGetAppInfo() {
         AppDetailDTO data = getAppInfoByName();
         if (data != null) {
             logger.info(String.format("\nid: %s\ntype: %s\nos type: %s\nstatus: %s", data.getId(), data.getType(), data.getOsType(), data.getStatus()));
         }
+        return 0;  // always success
     }
 
-    public static void executeUploadApk() {
+    public static int executeUploadApk() {
         String data = uploadApk();
         if (data != null) {
             logger.info("message: " + data);
+            return 0;
+        } else {
+            return 1;
         }
     }
 
-    public static void executeCreateApk() {
+    public static int executeCreateApk() {
         Long id = createApk();
         if (id != null) {
             logger.info("created apk id: " + id);
+            return 0;
+        } else {
+            return 1;
         }
     }
 
-    public static void executeDeleteApk() {
+    public static int executeDeleteApk() {
         long id;
         try {
             id = Long.parseLong(Utils.input("Please input apk id\n"));
         } catch (NumberFormatException e) {
             logger.error("not a valid id.");
-            return;
+            return 1;
         }
         String data = deleteApk(id);
         if (data != null) {
             logger.info("message: " + data);
+            return 0;
+        } else {
+            return 1;
         }
     }
 
