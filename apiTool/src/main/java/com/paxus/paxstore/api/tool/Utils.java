@@ -190,18 +190,17 @@ public class Utils {
             return null;
         }
         String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
-        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
-        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
-            logger.error("Parameter app but no param file found.");
-            return null;
-        }
         List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         // other info, read from cfg
-        // TODO: cfg validation
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
         if (cfg == null) {
             logger.error("load " + cfgJson + " failed.");
+            return null;
+        }
+        // TODO: more cfg validation
+        if (paramFilePaths.size() == 0 && cfg.baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
             return null;
         }
 
@@ -209,7 +208,7 @@ public class Utils {
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
         createApkRequest.setAppName(appName);
-        createApkRequest.setBaseType(baseType);
+        createApkRequest.setBaseType(cfg.baseType);
         createApkRequest.setShortDesc(cfg.shortDesc);
         createApkRequest.setDescription(cfg.fullDesc);
         createApkRequest.setReleaseNotes(releaseNote);

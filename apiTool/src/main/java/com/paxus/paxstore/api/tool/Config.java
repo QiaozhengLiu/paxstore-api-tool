@@ -15,6 +15,7 @@ import java.util.Map;
  */
 public class Config {
     public int chargeType;
+    public String baseType;
     public String shortDesc, fullDesc;
     public List<String> categoryList, modelNameList;
     public String featureImgFilePath, iconFilePath;
