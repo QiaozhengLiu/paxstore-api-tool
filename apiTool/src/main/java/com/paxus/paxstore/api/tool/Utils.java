@@ -328,11 +328,12 @@ public class Utils {
      * @param helpOption  helper option
      * @return true if param is empty or param has the helper option, else false
      */
-    public static boolean hasHelpOption(String[] args, Option helpOption) throws ParseException {
+    public static boolean hasHelpOption(String[] args, Options options) throws ParseException {
+        // TODO: fix helper message
         boolean hasHelp = false;
-        Options options = new Options();
-        options.addOption(helpOption);
-        if (args.length == 0 || new DefaultParser().parse(options, args).hasOption(helpOption)) {
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(options, args);
+        if (args.length == 0 || cmd.hasOption(options.getOption("h"))) {
             hasHelp = true;
         }
         return hasHelp;

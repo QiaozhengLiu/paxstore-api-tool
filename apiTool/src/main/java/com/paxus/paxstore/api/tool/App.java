@@ -20,8 +20,8 @@ public class App {
     public static final Logger logger = LoggerFactory.getLogger("ApiTool");
     public static final String releaseFolderPath = "apiTool/src/main/release-folder";
     public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
-    public static final String cfgFolderPath = "apiTool/src/main/cfg/";
-    public static final String cfgJson = "paxstore-api-cfg.json";
+    public static final String cfgFolderPath = "./.github/paxstore_api_config/";
+    public static final String cfgJson = "paxstore-api-config.json";
     public static final String[] commands = new String[]{"main", "getappInfo", "uploadapk", "createapk"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, command;
@@ -53,7 +53,7 @@ public class App {
             CommandLineParser commandLineParser = new DefaultParser();
             HelpFormatter formatter = new HelpFormatter();
             // show helper message
-            if (Utils.hasHelpOption(args, helpOption)) {
+            if (Utils.hasHelpOption(args, options)) {
                 formatter.printHelp("java -jar /path/to/apiTool.jar", options);
                 return;
             }
