@@ -14,6 +14,7 @@ import java.util.Map;
  * Read info in paxstore-api-cfg.json used in uploadApk
  */
 public class Config {
+    public String variantName;
     public int chargeType;
     public String baseType;
     public String shortDesc, fullDesc;

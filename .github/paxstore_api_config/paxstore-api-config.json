@@ -1,5 +1,6 @@
 {
   "com.test_paxstore_developer_api": {
+    "variantName": "test",
     "chargeType": 0,
     "baseType": "P",
     "shortDesc": "test short description",
@@ -11,6 +12,7 @@
     "iconFilePath": "icon.png"
   },
   "com.pax.us.pay.stdnative.rapidconnect.ssf": {
+    "variantName": "FDRC SSF",
     "chargeType": 0,
     "baseType": "P",
     "shortDesc": "test short description",

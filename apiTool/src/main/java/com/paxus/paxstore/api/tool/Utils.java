@@ -134,10 +134,18 @@ public class Utils {
      * @return a list of uploaded file content, UploadedFileContent
      */
     public static List<UploadedFileContent> createUploadFiles(List<String> filePaths) {
+        return createUploadFiles("", filePaths);
+    }
+
+    /**
+     * Convert file path list to upload file content list used on paxstore api.
+     * add a variant prefix as the subfolder
+     */
+    public static List<UploadedFileContent> createUploadFiles(String variant, List<String> filePaths) {
         return filePaths.stream()
+                .map(path -> variant + File.separator + path)
                 .map(Utils::createUploadFile)
                 .collect(Collectors.toList());
-
     }
 
     /**
@@ -147,6 +155,17 @@ public class Utils {
      * @return UploadedFileContent for a single file
      */
     public static UploadedFileContent createUploadFile(String filePath) {
+        return createUploadFile("", filePath);
+    }
+
+    /**
+     * FileUtils.createUploadFile and validate file path
+     * add a variant prefix as the subfolder
+     * @param filePath file path
+     * @return UploadedFileContent for a single file
+     */
+    public static UploadedFileContent createUploadFile(String variant, String filePath) {
+        filePath = variant + File.separator + filePath;
         if (!new File(filePath).exists()) {  // cfg only has file name
             filePath = cfgFolderPath + filePath;
         }
@@ -222,10 +241,10 @@ public class Utils {
         createApkRequest.setChargeType(cfg.chargeType);
         createApkRequest.setCategoryList(cfg.categoryList);
         createApkRequest.setModelNameList(cfg.modelNameList);
-        createApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.screenshotFilePaths));
+        createApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.variantName, cfg.screenshotFilePaths));
         createApkRequest.setParamTemplateFileList(paramTemplateList);
-        createApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.featureImgFilePath));
-        createApkRequest.setIconFile(Utils.createUploadFile(cfg.iconFilePath));
+        createApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
+        createApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));
 
         return createApkRequest;
     }
@@ -298,10 +317,10 @@ public class Utils {
         singleApkRequest.setChargeType(cfg.chargeType);
         singleApkRequest.setCategoryList(cfg.categoryList);
         singleApkRequest.setModelNameList(cfg.modelNameList);
-        singleApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.screenshotFilePaths));
+        singleApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.variantName, cfg.screenshotFilePaths));
         singleApkRequest.setParamTemplateFileList(paramTemplateList);
-        singleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.featureImgFilePath));
-        singleApkRequest.setIconFile(Utils.createUploadFile(cfg.iconFilePath));
+        singleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
+        singleApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));
         return singleApkRequest;
     }
 
