@@ -18,13 +18,14 @@ import java.util.Arrays;
 
 public class App {
     public static final Logger logger = LoggerFactory.getLogger("ApiTool");
-    public static final String releaseFolderPath = "apiTool/src/main/release-folder";
-    public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
+    // public static final String releaseFolderPath = "apiTool/src/main/release-folder";
+    // public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
+    // release folder path is now a parameter, for easier access in github workflow
     public static final String cfgFolderPath = "./.github/paxstore_api_config/";
     public static final String cfgJson = "paxstore-api-config.json";
     public static final String[] commands = new String[]{"main", "getappInfo", "uploadapk", "createapk"};
 
-    public static String apiKey, apiSecret, apiUrl, appName, pkgName, command;
+    public static String apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command;
     static DeveloperApi developerApi;
 
     public static void main(String[] args) {
@@ -38,6 +39,7 @@ public class App {
         Option urlOption = createOption("u", "url", "API_URL", "paxstore developer API url", true, true);
         Option appOption = createOption("a", "appname", "APP_NAME", "application name", true, true);
         Option pkgOption = createOption("p", "pkgname", "PACKAGE_NAME", "application package name", true, true);
+        Option releaseOption = createOption("r", "releasefolder", "RELEASE_FOLDER_PATH", "release zip file path contains apk, release note and parameter templates", true, true);
         Option commandOption = createOption("c", "command", "COMMAND", "available commands: " + Arrays.toString(commands), true, true);
         Option helpOption = createOption("h", "help", "", "show help message", false, false);
         options.addOption(keyOption)
@@ -45,6 +47,7 @@ public class App {
                 .addOption(urlOption)
                 .addOption(appOption)
                 .addOption(pkgOption)
+                .addOption(releaseOption)
                 .addOption(commandOption)
                 .addOption(helpOption);
 
@@ -64,6 +67,7 @@ public class App {
             apiUrl = cmd.getOptionValue(urlOption);
             appName = cmd.getOptionValue(appOption);
             pkgName = cmd.getOptionValue(pkgOption);
+            releaseFolderPath = cmd.getOptionValue(releaseOption);
             command = cmd.getOptionValue(commandOption);
         } catch (ParseException e) {
             logger.error(e.getMessage());
@@ -115,8 +119,10 @@ public class App {
         AppDetailDTO data = getAppInfoByName();
         if (data != null) {
             logger.info(String.format("\nid: %s\ntype: %s\nos type: %s\nstatus: %s", data.getId(), data.getType(), data.getOsType(), data.getStatus()));
+            return 1;
+        } else {
+            return 0;
         }
-        return 0;  // always success
     }
 
     public static int executeUploadApk() {

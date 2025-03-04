@@ -185,7 +185,7 @@ public class Utils {
         // unzip release folder
         try {
             FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
-            Utils.unzip(App.releaseFolderZipPath); //  unzip
+            Utils.unzip(App.releaseFolderPath + ".zip"); //  unzip
         } catch (IOException e) {
             logger.error(e.getMessage());
             return null;
@@ -259,7 +259,7 @@ public class Utils {
         // unzip release folder
         try {
             FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
-            Utils.unzip(App.releaseFolderZipPath); //  unzip
+            Utils.unzip(App.releaseFolderPath + ".zip"); //  unzip
         } catch (IOException e) {
             logger.error(e.getMessage());
             return null;
