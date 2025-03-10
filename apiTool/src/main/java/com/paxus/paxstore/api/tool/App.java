@@ -119,9 +119,9 @@ public class App {
         AppDetailDTO data = getAppInfoByName();
         if (data != null) {
             logger.info(String.format("\nid: %s\ntype: %s\nos type: %s\nstatus: %s", data.getId(), data.getType(), data.getOsType(), data.getStatus()));
-            return 1;
-        } else {
             return 0;
+        } else {
+            return 1;
         }
     }
 
