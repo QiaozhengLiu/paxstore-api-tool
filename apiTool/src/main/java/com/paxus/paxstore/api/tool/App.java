@@ -175,7 +175,7 @@ public class App {
             logger.error("get app info failed. error code: " + appInfo.getBusinessCode() + ", error message: " + appInfo.getMessage());
             return null;
         } else if (appInfo.getData().getPackageName() == null) {
-            logger.info(appName + "(" + pkgName + ") " + "doesn't exist on PAXSTORE. Check the app name and the package name.");
+            logger.info(appName + "(" + pkgName + ") " + "doesn't exist on PAXSTORE. Check the app name and the package name, or an new app will be created.");
         } else {
             logger.info(appName + "(" + pkgName + ") " + "exists on PAXSTORE.");
         }
