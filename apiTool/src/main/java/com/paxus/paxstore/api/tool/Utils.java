@@ -197,13 +197,11 @@ public class Utils {
             logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
             return null;
         }
-        String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote.txt", paramSuffix = ".zip";
+        String apkSuffix = ".apk", releaseNoteSuffix = ".txt", paramSuffix = ".zip";
 
         List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
         List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
-        // TODO: what about automation? can be more than one apk file collected? Only one app now
-        // TODO: matrix build, release and automation are two 'build' step, but share one 'release' step
 
         // apk file path, release note, param template list
         if (apkFilePaths.size() != 1) {
@@ -230,6 +228,9 @@ public class Utils {
             return null;
         }
 
+        logger.info("collected apk: " + apkFilePaths);
+        logger.info("collected parameter templates: " + paramFilePaths);
+        logger.info("collected release note: " + releaseNoteFilePaths);
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
@@ -276,8 +277,6 @@ public class Utils {
         List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
         List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
-        // TODO: what about automation? can be more than one apk file collected? Only one app now
-        // TODO: matrix build, release and automation are two 'build' step, but share one 'release' step
 
         // apk file path, release note, param template list
         if (apkFilePaths.size() != 1) {
