@@ -74,6 +74,10 @@ public class App {
             System.exit(1);
         }
 
+        // log all args
+        logger.info(String.format("accepted args:\napikey: %s\napisecret: %s\napiurl: %s\nappname: %s\npkgname: %s\nrelease folder: %s\ncommand: %s",
+                apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command));
+
         // developer api
         developerApi = new DeveloperApi(apiUrl, apiKey, apiSecret);
         int exeResult = 1;
