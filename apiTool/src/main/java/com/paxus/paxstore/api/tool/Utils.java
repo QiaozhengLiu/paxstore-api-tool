@@ -102,7 +102,7 @@ public class Utils {
                         what = "apk";
                     } else if (suffix.equals(".zip") && file.getParentFile().getName().equals("paxstore templates")) {
                         what = "parameter";
-                    } else if (suffix.equals("ReleaseNote.txt")) {
+                    } else if (suffix.equals(".txt") && file.getName().startsWith("ReleaseNote")) {
                         what = "release note";
                     }
                     logger.debug("found " + what + " file" + (what.equals("wrong") ? ", pass" : (": " + file.getAbsolutePath())));

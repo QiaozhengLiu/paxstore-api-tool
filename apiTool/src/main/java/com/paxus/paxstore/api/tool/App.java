@@ -75,7 +75,7 @@ public class App {
         }
 
         // log all args
-        logger.info(String.format("accepted args:\napikey: %s\napisecret: %s\napiurl: %s\nappname: %s\npkgname: %s\nrelease folder: %s\ncommand: %s",
+        logger.info(String.format("accepted args:\n\tapikey: %s\n\tapisecret: %s\n\tapiurl: %s\n\tappname: %s\n\tpkgname: %s\n\trelease folder: %s\n\tcommand: %s",
                 apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command));
 
         // developer api
