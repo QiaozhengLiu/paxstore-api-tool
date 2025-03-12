@@ -30,7 +30,7 @@ public class Config {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Config> data = objectMapper.readValue(new File(filePath), new TypeReference<Map<String, Config>>() {});
             return data.getOrDefault(pkgName, null);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error(e.getMessage());
         }
         return null;

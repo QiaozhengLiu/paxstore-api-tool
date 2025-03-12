@@ -219,7 +219,8 @@ public class Utils {
         // other info, read from cfg
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
         if (cfg == null) {
-            logger.error("load " + cfgJson + " failed.");
+            logger.error("load " + cfgFolderPath + cfgJson + " failed, please check work directory or config fields.");
+            logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
         // TODO: more cfg validation
@@ -300,7 +301,8 @@ public class Utils {
         // TODO: cfg validation
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
         if (cfg == null) {
-            logger.error("load " + cfgJson + " failed.");
+            logger.error("load " + cfgFolderPath + cfgJson + " failed, please check work directory or config fields.");
+            logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
 
