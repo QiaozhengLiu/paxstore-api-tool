@@ -21,7 +21,7 @@ public class App {
     // public static final String releaseFolderPath = "apiTool/src/main/release-folder";
     // public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
     // release folder path is now a parameter, for easier access in github workflow
-    public static final String cfgFolderPath = "./.github/paxstore_api_config/";
+    public static final String cfgFolderPath = "./paxstore_api_config/";
     public static final String cfgJson = "paxstore-api-config.json";
     public static final String[] commands = new String[]{"main", "getappInfo", "uploadapk", "createapk"};
 
