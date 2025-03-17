@@ -273,7 +273,7 @@ public class Utils {
             logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
             return null;
         }
-        String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote.txt", paramSuffix = ".zip";
+        String apkSuffix = ".apk", releaseNoteSuffix = "ReleaseNote", paramSuffix = ".zip";
 
         List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
