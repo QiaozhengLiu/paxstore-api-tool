@@ -258,6 +258,7 @@ public class Utils {
      * @return CreateSingleApkRequest
      */
     public static CreateSingleApkRequest createSingleApkRequest(long id) throws IOException {
+        // TODO: mostly same as createApkRequest, should be one function
         // unzip release folder
         try {
             FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
