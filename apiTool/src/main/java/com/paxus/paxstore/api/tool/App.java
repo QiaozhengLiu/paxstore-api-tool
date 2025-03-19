@@ -1,8 +1,10 @@
 package com.paxus.paxstore.api.tool;
 
 import com.pax.market.api.sdk.java.api.base.dto.AppDetailDTO;
+import com.pax.market.api.sdk.java.api.base.dto.CodeInfoDTO;
 import com.pax.market.api.sdk.java.api.base.dto.Result;
 import com.pax.market.api.sdk.java.api.developer.DeveloperApi;
+import com.sun.tools.javac.jvm.Code;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,7 +25,7 @@ public class App {
     // release folder path is now a parameter, for easier access in github workflow
     public static final String cfgFolderPath = ".github/paxstore_api_config/";
     public static final String cfgJson = "paxstore_api_config.json";
-    public static final String[] commands = new String[]{"main", "getappInfo", "uploadapk", "createapk"};
+    public static final String[] commands = new String[]{"main", "getappInfo", "uploadApk", "createApk", "getAppCategory"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command;
     static DeveloperApi developerApi;

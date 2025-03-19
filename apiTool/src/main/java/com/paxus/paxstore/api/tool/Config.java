@@ -15,6 +15,7 @@ import java.util.Map;
  */
 public class Config {
     public String variantName;
+    public String apkName;
     public int chargeType;
     public String baseType;
     public String shortDesc, fullDesc;

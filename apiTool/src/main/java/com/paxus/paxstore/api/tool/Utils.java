@@ -235,7 +235,7 @@ public class Utils {
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
-        createApkRequest.setAppName(appName);
+        createApkRequest.setAppName(cfg.apkName);
         createApkRequest.setBaseType(cfg.baseType);
         createApkRequest.setShortDesc(cfg.shortDesc);
         createApkRequest.setDescription(cfg.fullDesc);
@@ -305,12 +305,14 @@ public class Utils {
             logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
-
+        logger.info("collected apk: " + apkFilePaths);
+        logger.info("collected parameter templates: " + paramFilePaths);
+        logger.info("collected release note: " + releaseNoteFilePaths);
         // create request
         CreateSingleApkRequest singleApkRequest = new CreateSingleApkRequest();
         singleApkRequest.setAppId(id);
         singleApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
-        singleApkRequest.setApkName(appName);
+        singleApkRequest.setApkName(cfg.apkName);
         singleApkRequest.setApkType(baseType);
         singleApkRequest.setShortDesc(cfg.shortDesc);
         singleApkRequest.setDescription(cfg.fullDesc);

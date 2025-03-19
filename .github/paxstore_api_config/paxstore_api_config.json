@@ -1,6 +1,7 @@
 {
   "com.test_paxstore_developer_api": {
     "variantName": "test",
+    "apkName": "a custom apk name",
     "chargeType": 0,
     "baseType": "P",
     "shortDesc": "test short description",
@@ -13,18 +14,20 @@
   },
   "com.pax.us.pay.stdnative.rapidconnect.ssf": {
     "variantName": "FDRC SSF",
+    "apkName": "FDRC SSF Test a custom apk name",
     "chargeType": 0,
     "baseType": "P",
     "shortDesc": "test short description",
     "fullDesc": "test description\nitem1\nitem2\nitem3",
-    "modelNameList": ["A920"],
-    "categoryList": ["GYL_DK", "WL_PS", "SH_HY"],
+    "modelNameList": ["A30", "A35", "A3700", "A60", "A6650", "A77", "A80", "A800", "A920", "A920Max", "A920Pro", "A930", "Aries6", "Aries8", "IM30", "Q10A"],
+    "categoryList": ["RTL"],
     "screenshotFilePaths": ["screenshot0.png", "screenshot1.png", "screenshot2.png"],
     "featureImgFilePath": "feature.png",
     "iconFilePath": "icon.png"
   },
   "com.pax.us.pay.stdnative.shift4.lite.p2pe": {
     "variantName": "shift4_universal",
+    "apkName": "Shift4 Lite",
     "chargeType": 0,
     "baseType": "P",
     "shortDesc": "shift4 universal short description",
