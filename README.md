@@ -1,5 +1,5 @@
 # paxstore-api-tool
-A jar tool calls PAXSTORE developer API.
+A jar tool calls PAXSTORE developer API. This is used in BroadPOS app release workflow to upload release apks to PAXSTORE.
 
 ## Reference
 paxstore develop sdk: https://github.com/PAXSTORE/paxstore-develop-sdk/blob/master/README.md
