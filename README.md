@@ -7,7 +7,7 @@ paxstore develop sdk: https://github.com/PAXSTORE/paxstore-develop-sdk/blob/mast
 ## Usage
 - clean: `.\gradlew clean`
 - build: `.\gradlew assemble`
-- copy tool `.\apiTool\build\libs\apiTool-1.0.0-all.jar` for your further usage, or:
+- copy tool `.\apiTool\build\libs\apiTool-1.0.0-all.jar` and rename for your further usage, or:
 - run: `java -jar .\apiTool\build\libs\apiTool-1.0.0-all.jar --url API_URL --key API_KEY --secret API_SECRET --appname APP_NAME --pkgname PACKAGE_NAME --command COMMAND --releasefolder RELEASE_FOLDER`
 
 ## Command Line Parameters
