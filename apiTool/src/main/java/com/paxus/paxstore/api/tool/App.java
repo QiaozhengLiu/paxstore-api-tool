@@ -1,5 +1,6 @@
 package com.paxus.paxstore.api.tool;
 
+import com.pax.market.api.sdk.java.api.base.dto.ApkInfoDTO;
 import com.pax.market.api.sdk.java.api.base.dto.AppDetailDTO;
 import com.pax.market.api.sdk.java.api.base.dto.CodeInfoDTO;
 import com.pax.market.api.sdk.java.api.base.dto.Result;
@@ -25,7 +26,7 @@ public class App {
     // release folder path is now a parameter, for easier access in github workflow
     public static final String cfgFolderPath = ".github/paxstore_api_config/";
     public static final String cfgJson = "paxstore_api_config.json";
-    public static final String[] commands = new String[]{"main", "getappInfo", "uploadApk", "createApk", "getAppCategory"};
+    public static final String[] commands = new String[]{"main", "getappInfo", "uploadApk", "createApk", "getAppCategory", "getapkbyid"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command;
     static DeveloperApi developerApi;
@@ -99,6 +100,9 @@ public class App {
             case "deleteapk":
                 exeResult = executeDeleteApk();
                 break;
+            case "getapkbyid":
+                exeResult = executeGetApkById();
+                break;
             default:
                 logger.error("Not a valid command. Available commands: " + Arrays.toString(commands));
         }
@@ -160,6 +164,23 @@ public class App {
             return 1;
         }
         String data = deleteApk(id);
+        if (data != null) {
+            logger.info("message: " + data);
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    public static int executeGetApkById() {
+        long id;
+        try {
+            id = Long.parseLong(Utils.input("Please input apk id\n"));
+        } catch (NumberFormatException e) {
+            logger.error("not a valid id.");
+            return 1;
+        }
+        ApkInfoDTO data = getApkById(id);
         if (data != null) {
             logger.info("message: " + data);
             return 0;
@@ -267,6 +288,19 @@ public class App {
         }
     }
 
+    public static ApkInfoDTO getApkById(long id) {
+        Result<ApkInfoDTO> result = developerApi.getApkById(id);
+        if (result == null) {
+            logger.error("call getApkById API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("get apk by id failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
+            return null;
+        } else {
+            logger.info("get apk by id success.");
+            return result.getData();
+        }
+    }
     /**
      * helper to create option
      */
