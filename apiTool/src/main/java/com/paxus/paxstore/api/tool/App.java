@@ -218,7 +218,7 @@ public class App {
     public static String uploadApk() {
         Result<String> result;
         try {
-            result = developerApi.uploadApk(Utils.createApkRequest());
+            result = developerApi.uploadApk(Utils.createApkRequest(appName));  // set app name is mandatory, pass the command line param
         } catch (Exception e) {
             logger.error(e.getMessage());
             return null;
@@ -232,7 +232,7 @@ public class App {
         } else {
             logger.info("upload apk success.");
         }
-        return result.getData();
+        return "upload apk success, program should exit with no issue";  // getData(), getMessage() both returns null, hardcode a string here for return
     }
 
     /**

@@ -5,6 +5,7 @@ import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_PARAME
 import static com.paxus.paxstore.api.tool.App.appName;
 import static com.paxus.paxstore.api.tool.App.cfgFolderPath;
 import static com.paxus.paxstore.api.tool.App.cfgJson;
+import static com.paxus.paxstore.api.tool.App.createApk;
 import static com.paxus.paxstore.api.tool.App.logger;
 import static com.paxus.paxstore.api.tool.App.pkgName;
 import static com.paxus.paxstore.api.tool.App.releaseFolderPath;
@@ -181,7 +182,7 @@ public class Utils {
      *
      * @return CreateApkRequest
      */
-    public static CreateApkRequest createApkRequest() throws IOException {
+    public static CreateApkRequest createApkRequest(String appName) throws IOException {
         // unzip release folder
         try {
             FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
@@ -235,7 +236,8 @@ public class Utils {
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
-        createApkRequest.setAppName(cfg.apkName);
+        createApkRequest.setAppName(appName);  // setAppName is mandatory, same as the root app name
+        createApkRequest.setAppNameByVersion(cfg.apkName);  // app version name, or apkName in createSingleApkRequest
         createApkRequest.setBaseType(cfg.baseType);
         createApkRequest.setShortDesc(cfg.shortDesc);
         createApkRequest.setDescription(cfg.fullDesc);
