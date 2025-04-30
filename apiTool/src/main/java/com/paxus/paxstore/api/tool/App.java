@@ -5,7 +5,6 @@ import com.pax.market.api.sdk.java.api.base.dto.AppDetailDTO;
 import com.pax.market.api.sdk.java.api.base.dto.CodeInfoDTO;
 import com.pax.market.api.sdk.java.api.base.dto.Result;
 import com.pax.market.api.sdk.java.api.developer.DeveloperApi;
-import com.sun.tools.javac.jvm.Code;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,6 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class App {
     public static final Logger logger = LoggerFactory.getLogger("ApiTool");
@@ -26,7 +28,7 @@ public class App {
     // release folder path is now a parameter, for easier access in github workflow
     public static final String cfgFolderPath = ".github/paxstore_api_config/";
     public static final String cfgJson = "paxstore_api_config.json";
-    public static final String[] commands = new String[]{"main", "getappInfo", "uploadApk", "createApk", "getAppCategory", "getapkbyid"};
+    public static final String[] commands = new String[]{"main", "getappInfo", "uploadApk", "createApk", "getAppCategory", "getapkbyid", "getappcategory"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command;
     static DeveloperApi developerApi;
@@ -102,6 +104,9 @@ public class App {
                 break;
             case "getapkbyid":
                 exeResult = executeGetApkById();
+                break;
+            case "getappcategory":
+                exeResult = executeGetAppCategory();
                 break;
             default:
                 logger.error("Not a valid command. Available commands: " + Arrays.toString(commands));
@@ -189,6 +194,16 @@ public class App {
         }
     }
 
+    public static int executeGetAppCategory() {
+        List<String> data = getAppCategory();
+        if (data != null) {
+            logger.info("All category code in alphabetical order:\n" + String.join("\n", data));
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
     /**
      * call getAppInfoByName and check
      * @return appInfo if success, else null
@@ -201,7 +216,7 @@ public class App {
         } else if (appInfo.getBusinessCode() != 0) {
             logger.error("get app info failed. error code: " + appInfo.getBusinessCode() + ", error message: " + appInfo.getMessage());
             return null;
-        } else if (appInfo.getData().getPackageName() == null) {
+        } else if (appInfo.getData() == null || appInfo.getData().getPackageName() == null) {
             logger.info(appName + "(" + pkgName + ") " + "doesn't exist on PAXSTORE. Check the app name and the package name, or an new app will be created.");
         } else {
             logger.info(appName + "(" + pkgName + ") " + "exists on PAXSTORE.");
@@ -301,6 +316,24 @@ public class App {
             return result.getData();
         }
     }
+
+    public static List<String> getAppCategory() {
+        Result<CodeInfoDTO> result = developerApi.getAppCategory();
+        if (result == null) {
+            logger.error("call getApkById API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("get apk by id failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
+            return null;
+        } else {
+            logger.info("get app category success.");
+            // return a list of sorted codes
+            List<String> codeList = result.getPageInfo().getDataSet().stream().map(CodeInfoDTO::toString).collect(Collectors.toList());
+            Collections.sort(codeList);
+            return codeList;
+        }
+    }
+
     /**
      * helper to create option
      */

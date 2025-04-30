@@ -2,10 +2,8 @@ package com.paxus.paxstore.api.tool;
 
 import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_NORMAL;
 import static com.pax.market.api.sdk.java.api.constant.Constants.APP_TYPE_PARAMETER;
-import static com.paxus.paxstore.api.tool.App.appName;
 import static com.paxus.paxstore.api.tool.App.cfgFolderPath;
 import static com.paxus.paxstore.api.tool.App.cfgJson;
-import static com.paxus.paxstore.api.tool.App.createApk;
 import static com.paxus.paxstore.api.tool.App.logger;
 import static com.paxus.paxstore.api.tool.App.pkgName;
 import static com.paxus.paxstore.api.tool.App.releaseFolderPath;
@@ -18,7 +16,6 @@ import com.pax.market.api.sdk.java.api.util.FileUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -246,7 +243,11 @@ public class Utils {
         createApkRequest.setCategoryList(cfg.categoryList);
         createApkRequest.setModelNameList(cfg.modelNameList);
         createApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.variantName, cfg.screenshotFilePaths));
-        createApkRequest.setParamTemplateFileList(paramTemplateList);
+        if (cfg.baseType.equals(APP_TYPE_PARAMETER)) {
+            createApkRequest.setParamTemplateFileList(paramTemplateList);
+        } else {
+            logger.info("Standard App. parameter templates won't be attached.");
+        }
         createApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
         createApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));
 
@@ -324,6 +325,11 @@ public class Utils {
         singleApkRequest.setCategoryList(cfg.categoryList);
         singleApkRequest.setModelNameList(cfg.modelNameList);
         singleApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.variantName, cfg.screenshotFilePaths));
+        if (cfg.baseType.equals(APP_TYPE_PARAMETER)) {
+            singleApkRequest.setParamTemplateFileList(paramTemplateList);
+        } else {
+            logger.info("Standard App. parameter templates won't be attached.");
+        }
         singleApkRequest.setParamTemplateFileList(paramTemplateList);
         singleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
         singleApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));

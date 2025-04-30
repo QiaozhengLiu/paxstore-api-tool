@@ -34,7 +34,7 @@ java {
 dependencies {
     testImplementation 'junit:junit:4.13.2'
     testImplementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.whatspos.sdk:3rdsys-developerapi:1.3.0'
+    implementation 'com.whatspos.sdk:3rdsys-developerapi:1.4.0'
     implementation 'org.slf4j:slf4j-api:2.0.16'
     implementation 'org.slf4j:slf4j-simple:2.0.16'  // Add a logging backend
     implementation 'commons-cli:commons-cli:1.9.0'
