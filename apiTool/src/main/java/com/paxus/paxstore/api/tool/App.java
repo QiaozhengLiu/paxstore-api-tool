@@ -28,7 +28,7 @@ public class App {
     // release folder path is now a parameter, for easier access in github workflow
     public static final String cfgFolderPath = ".github/paxstore_api_config/";
     public static final String cfgJson = "paxstore_api_config.json";
-    public static final String[] commands = new String[]{"main", "getappInfo", "uploadApk", "createApk", "getAppCategory", "getapkbyid", "getappcategory"};
+    public static final String[] commands = new String[]{"getappinfo", "uploadapk", "createapk", "getapkbyid", "getappcategory"};
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command;
     static DeveloperApi developerApi;
@@ -87,9 +87,6 @@ public class App {
         developerApi = new DeveloperApi(apiUrl, apiKey, apiSecret);
         int exeResult = 1;
         switch (command.toLowerCase()) {
-            case "main":
-                exeResult = executeMain();
-                break;
             case "getappinfo":
                 exeResult = executeGetAppInfo();
                 break;
@@ -99,9 +96,9 @@ public class App {
             case "createapk":
                 exeResult = executeCreateApk();
                 break;
-            case "deleteapk":
-                exeResult = executeDeleteApk();
-                break;
+//            case "deleteapk":
+//                exeResult = executeDeleteApk();
+//                break;
             case "getapkbyid":
                 exeResult = executeGetApkById();
                 break;
