@@ -23,6 +23,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.*;
@@ -360,13 +361,14 @@ public class Utils {
      * @return true if param is empty or param has the helper option, else false
      */
     public static boolean hasHelpOption(String[] args, Options options) throws ParseException {
-        // TODO: fix helper message
-        boolean hasHelp = false;
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args);
-        if (args.length == 0 || cmd.hasOption(options.getOption("h"))) {
-            hasHelp = true;
-        }
-        return hasHelp;
+        // TODO: fix helper option
+//        boolean hasHelp = false;
+//        CommandLineParser parser = new DefaultParser();
+//        CommandLine cmd = parser.parse(options, args);
+//        if (args.length == 0 || cmd.hasOption(options.getOption("h"))) {
+//            hasHelp = true;
+//        }
+//        return hasHelp;
+        return Arrays.equals(args, new String[]{"--help"}) || Arrays.equals(args, new String[]{"-h"});
     }
 }
