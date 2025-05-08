@@ -26,7 +26,7 @@ DEV developers can test the tool with their credentials on paxstore SIT marketpl
 - app name: app name on paxstore. This is not apk name. Apk name can be changed in each version.
 - package name: pacakge name on paxstore. This is application id in code.
 - command: call different APIs. See next section for available commands.
-- release folder: the release zip file name contains apk, parameter template, release note. The zip file should follow BroadPOS release folder structure. Use Absolute path. Release folder is only used when using `createapk` or `uploadapk` and can be set to any value if other commands are used.
+- release folder: release folder name with absolute path. Don't include the suffix '.zip'. This is the release zip file name contains apk, parameter template, release note. The zip file should follow BroadPOS release folder structure. Use Absolute path. Release folder is only used when using `createapk` or `uploadapk` and can be set to any value if other commands are used.
 
 ### Available Commands
 - `getappinfo`: get app info. Use this to check if the app name and package name exists on paxstore.

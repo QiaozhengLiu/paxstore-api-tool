@@ -1,6 +1,6 @@
 {
   "com.pax.us.pay.manager.test.paxstore.api": {
-    "variantName": "manager",
+    "variantName": "test",
     "apkName": "BroadPOS Manager test apk name",
     "chargeType": 0,
     "baseType": "N",
