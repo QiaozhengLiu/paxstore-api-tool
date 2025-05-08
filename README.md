@@ -7,7 +7,7 @@ This tool calls paxstore develop sdk: https://github.com/paxstore/paxstore-devel
 ## Usage
 - clean: `.\gradlew clean`
 - build: `.\gradlew assemble`, result jar is at `.\apiTool\build\libs\apiTool-x.x.x-all.jar`. Or use the built jar at `.\bin\apiTool-x.x.x.jar`
-- run: `java -Xmx1536m -jar .\apiTool\build\libs\apiTool-x.x.x.jar --url API_URL --key API_KEY --secret API_SECRET --appname APP_NAME --pkgname PACKAGE_NAME --command COMMAND --releasefolder RELEASE_FOLDER`
+- run: `java -Xmx1536m -jar .\bin\apiTool-x.x.x.jar --url API_URL --key API_KEY --secret API_SECRET --appname APP_NAME --pkgname PACKAGE_NAME --command COMMAND --releasefolder RELEASE_FOLDER`
 - help message: `java -jar .\apiTool\build\libs\apiTool-x.x.x.jar -h`
 
 ## Command Line Parameters
