@@ -34,4 +34,8 @@ google-services.json
 
 release-folder*.zip
 
+# test release zips
 a_test_release_folder
+
+# build output
+bin
