@@ -29,11 +29,17 @@ DEV developers can test the tool with their credentials on paxstore SIT marketpl
 - release folder: release folder name with absolute path. Don't include the suffix '.zip'. This is the release zip file name contains apk, parameter template, release note. The zip file should follow BroadPOS release folder structure. Use Absolute path. Release folder is only used when using `createapk` or `uploadapk` and can be set to any value if other commands are used.
 
 ### Available Commands
+- `main`: command for BroadPOS release CI: get app info + create apk + edit apk + submit apk;
 - `getappinfo`: get app info. Use this to check if the app name and package name exists on paxstore.
 - `getappcategory`: get all business categories on paxstore.
 - `getapkbyid`: get apk info by input apk id. This is not same as app id shown on paxstore. Currently apk id can only be seen after `createapk` is successfully called as a returned value.
 - `createapk`: upload an app version without submit. Upload will be failed if the app name with package name is not in paxstore. New version is in `Draft` and allowed to edit or delete.
 - `uploadapk`: upload an app version and submit for approval, and create a new one if the app name with package name is not in paxstore. New version is in `Pending` and not allowed to edit or delete.
+
+### Implemented Commands but not Exposed for Command Line Use
+- `deleteapk`: delete a draft apk
+- `editapk`: edit a draft apk
+- `submitapk`: submit a draft apk for approval
 
 ## Config Folder
 - Run `createapk` and `uploadapk` need settings in config folder.

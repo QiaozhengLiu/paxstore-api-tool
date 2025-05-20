@@ -87,6 +87,9 @@ public class App {
         developerApi = new DeveloperApi(apiUrl, apiKey, apiSecret);
         int exeResult = 1;
         switch (command.toLowerCase()) {
+            case "main":
+                exeResult = executeMain();
+                break;
             case "getappinfo":
                 exeResult = executeGetAppInfo();
                 break;
@@ -96,9 +99,6 @@ public class App {
             case "createapk":
                 exeResult = executeCreateApk();
                 break;
-//            case "deleteapk":
-//                exeResult = executeDeleteApk();
-//                break;
             case "getapkbyid":
                 exeResult = executeGetApkById();
                 break;
@@ -112,19 +112,34 @@ public class App {
     }
 
     public static int executeMain() {
-        // getAppInfo and check if app exists
-        logger.info("start getAppInfoByName");
-        AppDetailDTO appInfo = getAppInfoByName();
-
-        // upload apk
-        logger.info("start uploadApk");
-        String data = uploadApk();
-        if (data != null) {
-            logger.info("message: " + data);
-            return 0;
+        // run getAppInfo, print app info
+        logger.info("Check app info first");
+        executeGetAppInfo();
+        // create apk, but don't include param, set baseType = N
+        logger.info("start createApk");
+        Long id = createApk(false);
+        if (id != null) {
+            logger.info("created apk id: " + id);
         } else {
             return 1;
         }
+        // edit apk, add params, set baseType
+        logger.info("start editApk");
+        String msg = editApk(id);
+        if (msg != null) {
+            logger.info("edit apk result: " + msg);
+        } else {
+            return 1;
+        }
+        // submit apk
+        logger.info("start submitApk");
+        msg = submitApk(id);
+        if (msg != null) {
+            logger.info("submit apk result: " + msg);
+        } else {
+            return 1;
+        }
+        return 0;
     }
 
     public static int executeGetAppInfo() {
@@ -148,26 +163,9 @@ public class App {
     }
 
     public static int executeCreateApk() {
-        Long id = createApk();
+        Long id = createApk(true);
         if (id != null) {
             logger.info("created apk id: " + id);
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-
-    public static int executeDeleteApk() {
-        long id;
-        try {
-            id = Long.parseLong(Utils.input("Please input apk id\n"));
-        } catch (NumberFormatException e) {
-            logger.error("not a valid id.");
-            return 1;
-        }
-        String data = deleteApk(id);
-        if (data != null) {
-            logger.info("message: " + data);
             return 0;
         } else {
             return 1;
@@ -241,19 +239,18 @@ public class App {
         } else if (result.getBusinessCode() != 0) {
             logger.error("upload apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
-        } else {
-            logger.info("upload apk success.");
         }
-        return "upload apk success, program should exit with no issue";  // getData(), getMessage() both returns null, hardcode a string here for return
+        return "upload apk success.";  // getData(), getMessage() both returns null
     }
 
     /**
      * call getAppinfo to get id, and createApk, and check
-     * this will only upload the apk, not submitted for approval yet
+     * this will only upload the apk, not submitted for approval
      * app is in 'draft' status
-     * @return apk id if success, else null
+     * @param addParam true if include param files, else false
+     * @return apk id of the created apk
      */
-    public static Long createApk() {
+    public static Long createApk(boolean addParam) {
         AppDetailDTO appInfo = getAppInfoByName();
         if (appInfo == null || appInfo.getId() == null) {
             logger.error("get app id failed, cannot create apk");
@@ -262,7 +259,7 @@ public class App {
         long id = appInfo.getId();
         Result<Long> result;
         try {
-            result = developerApi.createApk(Utils.createSingleApkRequest(id));
+            result = developerApi.createApk(Utils.createSingleApkRequest(id, addParam));
         } catch (Exception e) {
             logger.error(e.getMessage());
             return null;
@@ -294,10 +291,8 @@ public class App {
         } else if (result.getBusinessCode() != 0) {
             logger.error("delete apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
-        } else {
-            logger.info("delete apk success.");
-            return result.getData();
         }
+        return "delete apk success.";  // getData(), getMessage() both returns null
     }
 
     public static ApkInfoDTO getApkById(long id) {
@@ -329,6 +324,42 @@ public class App {
             Collections.sort(codeList);
             return codeList;
         }
+    }
+
+    public static String editApk(long id) {
+        Result<String> result;
+        try {
+            result = developerApi.editApk(Utils.editSingleApkRequest(id));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+        if (result == null) {
+            logger.error("call edit API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("edit apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
+            return null;
+        }
+        return "edit apk success.";  // getData(), getMessage() both returns null
+    }
+
+    public static String submitApk(long id) {
+        Result<String> result;
+        try {
+            result = developerApi.submitApk(id);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+        if (result == null) {
+            logger.error("call submitapk API error.");
+            return null;
+        } else if (result.getBusinessCode() != 0) {
+            logger.error("submit apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
+            return null;
+        }
+        return "submit apk success.";  // getData(), getMessage() both returns null
     }
 
     /**

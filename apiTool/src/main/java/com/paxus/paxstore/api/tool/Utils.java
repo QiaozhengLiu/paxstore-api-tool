@@ -10,12 +10,10 @@ import static com.paxus.paxstore.api.tool.App.releaseFolderPath;
 
 import com.pax.market.api.sdk.java.api.developer.dto.CreateApkRequest;
 import com.pax.market.api.sdk.java.api.developer.dto.step.CreateSingleApkRequest;
+import com.pax.market.api.sdk.java.api.developer.dto.step.EditSingleApkRequest;
 import com.pax.market.api.sdk.java.api.io.UploadedFileContent;
 import com.pax.market.api.sdk.java.api.util.FileUtils;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -229,7 +227,6 @@ public class Utils {
         }
 
         logger.info("collected apk: " + apkFilePaths);
-        logger.info("collected parameter templates: " + paramFilePaths);
         logger.info("collected release note: " + releaseNoteFilePaths);
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
@@ -258,10 +255,12 @@ public class Utils {
     /**
      * Create Single Apk request. Used for createApk
      * diff from createApkRequest: id, setApkName, setApkType
-     *
+     * @param id app id
+     * @param addParam true if add param files in the request, else false
      * @return CreateSingleApkRequest
+     * @throws IOException
      */
-    public static CreateSingleApkRequest createSingleApkRequest(long id) throws IOException {
+    public static CreateSingleApkRequest createSingleApkRequest(long id, boolean addParam) throws IOException {
         // TODO: mostly same as createApkRequest, should be one function
         // unzip release folder
         try {
@@ -296,6 +295,10 @@ public class Utils {
         }
         String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
         String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (!addParam) {
+            baseType = APP_TYPE_NORMAL;
+            logger.info("Don't include param files in this createApk request. BaseType is set to N");
+        }
         if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
             logger.error("Parameter app but no param file found.");
             return null;
@@ -303,7 +306,6 @@ public class Utils {
         List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         // other info, read from cfg
-        // TODO: cfg validation
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
         if (cfg == null) {
             logger.error("load " + cfgFolderPath + cfgJson + " failed, please check work directory or config fields.");
@@ -311,8 +313,10 @@ public class Utils {
             return null;
         }
         logger.info("collected apk: " + apkFilePaths);
-        logger.info("collected parameter templates: " + paramFilePaths);
         logger.info("collected release note: " + releaseNoteFilePaths);
+        if (baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.info("collected parameter: " + paramFilePaths);
+        }
         // create request
         CreateSingleApkRequest singleApkRequest = new CreateSingleApkRequest();
         singleApkRequest.setAppId(id);
@@ -326,15 +330,84 @@ public class Utils {
         singleApkRequest.setCategoryList(cfg.categoryList);
         singleApkRequest.setModelNameList(cfg.modelNameList);
         singleApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.variantName, cfg.screenshotFilePaths));
-        if (cfg.baseType.equals(APP_TYPE_PARAMETER)) {
+        if (baseType.equals(APP_TYPE_PARAMETER)) {
             singleApkRequest.setParamTemplateFileList(paramTemplateList);
         } else {
             logger.info("Standard App. parameter templates won't be attached.");
         }
-        singleApkRequest.setParamTemplateFileList(paramTemplateList);
         singleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
         singleApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));
         return singleApkRequest;
+    }
+
+    /**
+     * Edit Single Apk request. Used for editApk
+     * TODO: apk won't be edited, edit other items, this is to solve createApk/uploadApk exceeds file size limit (around 150MB)
+     * @return EditSingleApkRequest
+     */
+    public static EditSingleApkRequest editSingleApkRequest(long id) throws IOException {
+        // unzip release folder
+        try {
+            FileUtils.delFolder(releaseFolderPath);  // delete folder if exists
+            Utils.unzip(App.releaseFolderPath + ".zip"); //  unzip
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+
+        // get file path from release folder
+        File releaseFolder = new File(releaseFolderPath);
+        if (!releaseFolder.exists()) {
+            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed, or zip release file name and compressed release folder name don't match.");
+            return null;
+        }
+
+        // get params and other cfg
+        String paramSuffix = ".zip", releaseNoteSuffix = ".txt";
+        List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
+        List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
+
+        logger.info("collected parameter templates: " + paramFilePaths);
+        if (releaseNoteFilePaths.size() != 1) {
+            logger.error("There should only be one release note file. Found: " + releaseNoteFilePaths);
+            return null;
+        }
+        String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
+
+        // cfg validation
+        Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
+        if (cfg == null) {
+            logger.error("load " + cfgFolderPath + cfgJson + " failed, please check work directory or config fields.");
+            logger.error("current work directory: " + new File("").getAbsolutePath());
+            return null;
+        }
+        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
+        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
+
+        // compose request, only include non-nullable: appId, apkName, apkType, modelList, category, description, icon, screenshot, params
+        EditSingleApkRequest editSingleApkRequest = new EditSingleApkRequest();
+        editSingleApkRequest.setApkId(id);
+        editSingleApkRequest.setApkName(cfg.apkName);
+        editSingleApkRequest.setApkType(baseType);
+        editSingleApkRequest.setModelNameList(cfg.modelNameList);
+        editSingleApkRequest.setCategoryList(cfg.categoryList);
+        editSingleApkRequest.setShortDesc(cfg.shortDesc);
+        editSingleApkRequest.setDescription(cfg.fullDesc);
+        editSingleApkRequest.setReleaseNotes(releaseNote);
+        editSingleApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));
+        editSingleApkRequest.setScreenshotFileList(Utils.createUploadFiles(cfg.variantName, cfg.screenshotFilePaths));
+        if (baseType.equals(APP_TYPE_PARAMETER)) {
+            editSingleApkRequest.setParamTemplateFileList(paramTemplateList);
+        } else {
+            logger.info("Standard App. parameter templates won't be attached.");
+        }
+        editSingleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
+
+        return editSingleApkRequest;
     }
 
     /**
