@@ -193,7 +193,7 @@ public class Utils {
         // get file path from release folder
         File releaseFolder = new File(releaseFolderPath);
         if (!releaseFolder.exists()) {
-            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
+            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed, or zip release file name and compressed release folder name don't match.");
             return null;
         }
         String apkSuffix = ".apk", releaseNoteSuffix = ".txt", paramSuffix = ".zip";
@@ -275,7 +275,7 @@ public class Utils {
         // get file path from release folder
         File releaseFolder = new File(releaseFolderPath);
         if (!releaseFolder.exists()) {
-            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed.");
+            logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed, or zip release file name and compressed release folder name don't match.");
             return null;
         }
         String apkSuffix = ".apk", releaseNoteSuffix = ".txt", paramSuffix = ".zip";
