@@ -39,3 +39,5 @@ a_test_release_folder
 
 # build output
 bin
+
+.github

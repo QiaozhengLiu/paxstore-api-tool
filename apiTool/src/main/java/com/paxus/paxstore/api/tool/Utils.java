@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.*;
@@ -211,6 +212,11 @@ public class Utils {
             return null;
         }
         String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
+        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
         List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         // other info, read from cfg
@@ -228,6 +234,9 @@ public class Utils {
 
         logger.info("collected apk: " + apkFilePaths);
         logger.info("collected release note: " + releaseNoteFilePaths);
+        if (baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.info("collected parameter: " + paramFilePaths);
+        }
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
@@ -312,10 +321,10 @@ public class Utils {
             logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
-        logger.info("collected apk: " + apkFilePaths);
-        logger.info("collected release note: " + releaseNoteFilePaths);
+        logger.info("collected apk: " + apkFilePaths.stream().map(s -> s.substring(s.lastIndexOf("\\") + 1)).collect(Collectors.toList()));
+        logger.info("collected release note: " + releaseNoteFilePaths.stream().map(s -> s.substring(s.lastIndexOf("\\") + 1)).collect(Collectors.toList()));
         if (baseType.equals(APP_TYPE_PARAMETER)) {
-            logger.info("collected parameter: " + paramFilePaths);
+            logger.info("collected parameter: " + paramFilePaths.stream().map(s -> s.substring(s.lastIndexOf("\\") + 1)).collect(Collectors.toList()));
         }
         // create request
         CreateSingleApkRequest singleApkRequest = new CreateSingleApkRequest();
