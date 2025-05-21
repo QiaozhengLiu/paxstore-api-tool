@@ -321,10 +321,10 @@ public class Utils {
             logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
-        logger.info("collected apk: " + apkFilePaths.stream().map(s -> s.substring(s.lastIndexOf("\\") + 1)).collect(Collectors.toList()));
-        logger.info("collected release note: " + releaseNoteFilePaths.stream().map(s -> s.substring(s.lastIndexOf("\\") + 1)).collect(Collectors.toList()));
+        logger.info("collected apk: " + apkFilePaths);
+        logger.info("collected release note: " + releaseNoteFilePaths);
         if (baseType.equals(APP_TYPE_PARAMETER)) {
-            logger.info("collected parameter: " + paramFilePaths.stream().map(s -> s.substring(s.lastIndexOf("\\") + 1)).collect(Collectors.toList()));
+            logger.info("collected parameter: " + paramFilePaths);
         }
         // create request
         CreateSingleApkRequest singleApkRequest = new CreateSingleApkRequest();
