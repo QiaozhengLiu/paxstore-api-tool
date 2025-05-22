@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.*;
@@ -196,7 +197,6 @@ public class Utils {
             return null;
         }
         String apkSuffix = ".apk", releaseNoteSuffix = ".txt", paramSuffix = ".zip";
-
         List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
         List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
@@ -217,7 +217,6 @@ public class Utils {
             logger.error("Parameter app but no param file found.");
             return null;
         }
-        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         // other info, read from cfg
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
@@ -226,17 +225,36 @@ public class Utils {
             logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
-        // TODO: more cfg validation
-        if (paramFilePaths.size() == 0 && cfg.baseType.equals(APP_TYPE_PARAMETER)) {
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
             logger.error("Parameter app but no param file found.");
             return null;
         }
+
+        // order param templates
+        List<String> paramOrder = cfg.paramOrder;
+        for (String p : paramFilePaths) {
+            if (p.contains(File.separator)) {
+                p = p.substring(p.lastIndexOf(File.separator) + 1);
+                if (!paramOrder.contains(p)) {
+                    logger.error("found param file " + p + " in release folder, not specified in config field paramOrder: " + cfg.paramOrder);
+                    return null;
+                }
+            }
+        }
+        paramFilePaths.sort(Comparator.comparingInt(p -> {
+            if (p.contains(File.separator)) {
+                p = p.substring(p.lastIndexOf(File.separator) + 1);
+            }
+            return paramOrder.indexOf(p);
+                }));
+        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         logger.info("collected apk: " + apkFilePaths);
         logger.info("collected release note: " + releaseNoteFilePaths);
         if (baseType.equals(APP_TYPE_PARAMETER)) {
             logger.info("collected parameter: " + paramFilePaths);
         }
+
         // create request
         CreateApkRequest createApkRequest = new CreateApkRequest();
         createApkRequest.setAppFile(Utils.createUploadFile(apkFilePath));
@@ -287,7 +305,6 @@ public class Utils {
             return null;
         }
         String apkSuffix = ".apk", releaseNoteSuffix = ".txt", paramSuffix = ".zip";
-
         List<String> apkFilePaths = Utils.listAndMatchFile(releaseFolder, apkSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
         List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
@@ -312,7 +329,6 @@ public class Utils {
             logger.error("Parameter app but no param file found.");
             return null;
         }
-        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
         // other info, read from cfg
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
@@ -321,11 +337,36 @@ public class Utils {
             logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
+
+        // order param templates
+        List<String> paramOrder = cfg.paramOrder;
+        for (String p : paramFilePaths) {
+            if (p.contains(File.separator)) {
+                p = p.substring(p.lastIndexOf(File.separator) + 1);
+                if (!paramOrder.contains(p)) {
+                    logger.error("found param file " + p + " in release folder, not specified in config field paramOrder: " + cfg.paramOrder);
+                    return null;
+                }
+            }
+        }
+        paramFilePaths.sort(Comparator.comparingInt(p -> {
+            if (p.contains(File.separator)) {
+                p = p.substring(p.lastIndexOf(File.separator) + 1);
+            }
+            return paramOrder.indexOf(p);
+        }));
+        List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
+
         logger.info("collected apk: " + apkFilePaths);
         logger.info("collected release note: " + releaseNoteFilePaths);
         if (baseType.equals(APP_TYPE_PARAMETER)) {
             logger.info("collected parameter: " + paramFilePaths);
         }
+
         // create request
         CreateSingleApkRequest singleApkRequest = new CreateSingleApkRequest();
         singleApkRequest.setAppId(id);
@@ -342,7 +383,7 @@ public class Utils {
         if (baseType.equals(APP_TYPE_PARAMETER)) {
             singleApkRequest.setParamTemplateFileList(paramTemplateList);
         } else {
-            logger.info("Standard App. parameter templates won't be attached.");
+            logger.info("Standard App or create with no params. parameter templates won't be attached.");
         }
         singleApkRequest.setFeaturedImgFile(Utils.createUploadFile(cfg.variantName, cfg.featureImgFilePath));
         singleApkRequest.setIconFile(Utils.createUploadFile(cfg.variantName, cfg.iconFilePath));
@@ -370,34 +411,56 @@ public class Utils {
             logger.error(releaseFolderPath + " doesn't exist. Unzip release folder failed, or zip release file name and compressed release folder name don't match.");
             return null;
         }
-
-        // get params and other cfg
+        // don't collect apk file
         String paramSuffix = ".zip", releaseNoteSuffix = ".txt";
         List<String> paramFilePaths = Utils.listAndMatchFile(releaseFolder, paramSuffix);
         List<String> releaseNoteFilePaths = Utils.listAndMatchFile(releaseFolder, releaseNoteSuffix);
 
-        logger.info("collected parameter templates: " + paramFilePaths);
+        // release note, param template list
         if (releaseNoteFilePaths.size() != 1) {
             logger.error("There should only be one release note file. Found: " + releaseNoteFilePaths);
             return null;
         }
         String releaseNote = loadFileToString(releaseNoteFilePaths.get(0));
+        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
+        if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
+            logger.error("Parameter app but no param file found.");
+            return null;
+        }
 
-        // cfg validation
+        // other info, read from cfg
         Config cfg = Config.loadJson(cfgFolderPath + cfgJson, pkgName);
         if (cfg == null) {
             logger.error("load " + cfgFolderPath + cfgJson + " failed, please check work directory or config fields.");
             logger.error("current work directory: " + new File("").getAbsolutePath());
             return null;
         }
-        String baseType = pkgName.contains("manager") ? APP_TYPE_NORMAL : APP_TYPE_PARAMETER;
         if (paramFilePaths.size() == 0 && baseType.equals(APP_TYPE_PARAMETER)) {
             logger.error("Parameter app but no param file found.");
             return null;
         }
+
+        // order param templates
+        List<String> paramOrder = cfg.paramOrder;
+        for (String p : paramFilePaths) {
+            if (p.contains(File.separator)) {
+                p = p.substring(p.lastIndexOf(File.separator) + 1);
+                if (!paramOrder.contains(p)) {
+                    logger.error("found param file " + p + " in release folder, not specified in config field paramOrder: " + cfg.paramOrder);
+                    return null;
+                }
+            }
+        }
+        paramFilePaths.sort(Comparator.comparingInt(p -> {
+            if (p.contains(File.separator)) {
+                p = p.substring(p.lastIndexOf(File.separator) + 1);
+            }
+            return paramOrder.indexOf(p);
+        }));
         List<UploadedFileContent> paramTemplateList = Utils.createUploadFiles(paramFilePaths);
 
-        // compose request, only include non-nullable: appId, apkName, apkType, modelList, category, description, icon, screenshot, params
+
+        // create request, don't include apk file
         EditSingleApkRequest editSingleApkRequest = new EditSingleApkRequest();
         editSingleApkRequest.setApkId(id);
         editSingleApkRequest.setApkName(cfg.apkName);
