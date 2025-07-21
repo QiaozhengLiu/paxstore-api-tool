@@ -29,7 +29,8 @@ DEV developers can test the tool with their credentials on paxstore SIT marketpl
 - release folder: release folder name with absolute path. Don't include the suffix '.zip'. This is the release zip file name contains apk, parameter template, release note. The zip file should follow BroadPOS release folder structure. Use Absolute path. Release folder is only used when using `createapk` or `uploadapk` and can be set to any value if other commands are used.
 
 ### Available Commands
-- `main`: command for BroadPOS release CI: get app info + create apk + edit apk + submit apk;
+- `main`: command for BroadPOS release CI: get app info + create apk + edit apk + submit apk; only available for existed app.
+- `test`: command for BroadPOS release CI to test: get app info + create apk + edit apk + delete apk; only available for existed app.
 - `getappinfo`: get app info. Use this to check if the app name and package name exists on paxstore.
 - `getappcategory`: get all business categories on paxstore.
 - `getapkbyid`: get apk info by input apk id. This is not same as app id shown on paxstore. Currently apk id can only be seen after `createapk` is successfully called as a returned value.

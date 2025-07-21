@@ -22,13 +22,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class App {
-    public static final Logger logger = LoggerFactory.getLogger("ApiTool");
-    // public static final String releaseFolderPath = "apiTool/src/main/release-folder";
-    // public static final String releaseFolderZipPath = releaseFolderPath + ".zip";
-    // release folder path is now a parameter, for easier access in github workflow
+    public static final Logger logger = LoggerFactory.getLogger("PaxstoreApiTool");
     public static final String cfgFolderPath = ".github/paxstore_api_config/";
     public static final String cfgJson = "paxstore_api_config.json";
-    public static final String[] commands = new String[]{"getappinfo", "uploadapk", "createapk", "getapkbyid", "getappcategory"};
+    public static final String[] commands = new String[]{
+            "main",  // createApk + editApk + submitApk, app must exist on paxstore
+            "test",  // createApk + editApk + deleteApk, app must exist on paxstore
+            "getappinfo", "uploadapk", "createapk", "getapkbyid", "getappcategory"
+    };
 
     public static String apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command;
     static DeveloperApi developerApi;
@@ -79,6 +80,10 @@ public class App {
             System.exit(1);
         }
 
+        // log version
+        String version = Utils.getPaxstoreApiToolVersion();
+        logger.info("PaxstoreApiTool version: " + version);
+
         // log all args
         logger.info(String.format("accepted args:\n\tapikey: %s\n\tapisecret: %s\n\tapiurl: %s\n\tappname: %s\n\tpkgname: %s\n\trelease folder: %s\n\tcommand: %s",
                 apiKey, apiSecret, apiUrl, appName, pkgName, releaseFolderPath, command));
@@ -89,6 +94,9 @@ public class App {
         switch (command.toLowerCase()) {
             case "main":
                 exeResult = executeMain();
+                break;
+            case "test":
+                exeResult = executeTest();
                 break;
             case "getappinfo":
                 exeResult = executeGetAppInfo();
@@ -115,6 +123,7 @@ public class App {
         // run getAppInfo, print app info
         logger.info("Check app info first");
         executeGetAppInfo();
+
         // create apk, but don't include param, set baseType = N
         logger.info("start createApk");
         Long id = createApk(false);
@@ -123,6 +132,7 @@ public class App {
         } else {
             return 1;
         }
+
         // edit apk, add params, set baseType
         logger.info("start editApk");
         String msg = editApk(id);
@@ -131,6 +141,7 @@ public class App {
         } else {
             return 1;
         }
+
         // submit apk
         logger.info("start submitApk");
         msg = submitApk(id);
@@ -142,10 +153,50 @@ public class App {
         return 0;
     }
 
+    public static int executeTest() {
+
+        // run getAppInfo, print app info
+        logger.info("Check app info first");
+        int ret = executeGetAppInfo();
+
+        // if not on paxstore, don't run following commands
+        // createapk should only be applied on existing apps
+        if (ret != 0) {
+            logger.warn(String.format("%s(%s) doesn't exist on paxstore. Cannot run the test command. Return True.", appName, pkgName));
+            return 0;
+        }
+
+        // create apk
+        logger.info("start createApk");
+        Long id = createApk(false);
+        if (id != null) {
+            logger.info("created apk id: " + id);
+        } else {
+            return 1;
+        }
+
+        // edit apk
+        logger.info("start editApk");
+        String msg = App.editApk(id);
+        if (!"edit apk success.".equals(msg)) {
+            return 1;
+        }
+
+        // delete apk
+        logger.info("start deleteApk");
+        msg = App.deleteApk(id);
+        if (!"delete apk success.".equals(msg)) {
+            return 1;
+        }
+
+        // test end after all step success
+        return 0;
+    }
+
     public static int executeGetAppInfo() {
         AppDetailDTO data = getAppInfoByName();
         if (data != null) {
-            logger.info(String.format("\nid: %s\ntype: %s\nos type: %s\nstatus: %s", data.getId(), data.getType(), data.getOsType(), data.getStatus()));
+            logger.info(String.format("App information\nid: %s\ntype: %s\nos type: %s\nstatus: %s", data.getId(), data.getType(), data.getOsType(), data.getStatus()));
             return 0;
         } else {
             return 1;
@@ -240,7 +291,7 @@ public class App {
             logger.error("upload apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
         }
-        return "upload apk success.";  // getData(), getMessage() both returns null
+        return "upload apk success.";  // getData(), getMessage() both returns null, hardcode a return msg
     }
 
     /**
@@ -292,7 +343,7 @@ public class App {
             logger.error("delete apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
         }
-        return "delete apk success.";  // getData(), getMessage() both returns null
+        return "delete apk success.";  // getData(), getMessage() both returns null, hardcode a return msg
     }
 
     public static ApkInfoDTO getApkById(long id) {
@@ -341,7 +392,7 @@ public class App {
             logger.error("edit apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
         }
-        return "edit apk success.";  // getData(), getMessage() both returns null
+        return "edit apk success.";  // getData(), getMessage() both returns null, hardcode a return msg
     }
 
     public static String submitApk(long id) {
@@ -359,7 +410,7 @@ public class App {
             logger.error("submit apk failed. error code: " + result.getBusinessCode() + ", error message: " + result.getMessage());
             return null;
         }
-        return "submit apk success.";  // getData(), getMessage() both returns null
+        return "submit apk success.";  // getData(), getMessage() both returns null, hardcode a return msg
     }
 
     /**

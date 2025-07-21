@@ -22,9 +22,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.zip.*;
 
@@ -515,5 +515,27 @@ public class Utils {
 //        }
 //        return hasHelp;
         return Arrays.equals(args, new String[]{"--help"}) || Arrays.equals(args, new String[]{"-h"});
+    }
+
+    /**
+     * Get the tool version defined in gradle.properties
+     * @return tool version
+     */
+    protected static String getPaxstoreApiToolVersion() {
+        // First try manifest (for packaged JAR)
+        String version = App.class.getPackage().getImplementationVersion();
+        if (version != null) {
+            return version;
+        }
+
+        // Fallback: read from gradle.properties (for development use)
+        try (InputStream input = new FileInputStream("gradle.properties")) {
+            Properties props = new Properties();
+            props.load(input);
+            version = props.getProperty("_version", "unknown");
+        } catch (IOException e) {
+            version = "unknown";
+        }
+        return version;
     }
 }
